@@ -3,6 +3,6 @@ numpy
 pandas
 pytorch_metric_learning
 scikit-learn
-skimage
+scikit-image
 torch
 torchvision 
