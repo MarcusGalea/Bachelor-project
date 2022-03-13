@@ -22,5 +22,6 @@
 #BSUB -e Error_%J.err 
 
 # here follow the commands you want to execute
+module load python3/3.8.11
 source ~/bachelor/bin/activate
 python3 example.py

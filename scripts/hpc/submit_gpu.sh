@@ -25,4 +25,4 @@
 # here follow the commands you want to execute
 module load cuda/11.6
 source ~/bachelor/bin/activate
-python3 Desktop/Bachelor-project/Bachelor-project/scripts/hpc/example_gpu.py
+python3 example_gpu.py
