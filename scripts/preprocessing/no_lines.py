@@ -10,13 +10,15 @@ import os
 import numpy as np
 import matplotlib.image as mpimg
 from skimage.transform import resize
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
 
-
-direc = r"C:\Users\aleks\OneDrive\Dokumenter\GitHub\Bachelor-project--defect-detection-on-solar-panels\data\\"
+direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
 
-series = r"Series4\\"
+series = r"Series1\\"
 origin = series + r"CellsCorr\\"
 
 destination = series + r"CellsCorr_noline\\"
@@ -24,7 +26,7 @@ destination = series + r"CellsCorr_noline\\"
 
 import sys
 sys.path.insert(1, direc+'scripts')
-from preprocessing.functions import *
+from functions import *
 import matplotlib.pyplot as plt
 
 k = 0
@@ -46,7 +48,7 @@ for pic in os.listdir(direc+origin):
         lines = find_lines(binimg,tol)
         img = remove_lines(img,lines)
         
-        img = resize(img, (250, 250))
+        img = resize(img, (300, 300))
         
         mpimg.imsave(direc+destination+"_noline_"+pic, img,cmap = "gray")
         
