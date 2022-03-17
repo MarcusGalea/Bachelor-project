@@ -18,7 +18,7 @@ os.chdir(dname)
 direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
 
-series = r"Series1\\"
+series = r"Series2\\"
 origin = series + r"CellsCorr\\"
 
 destination = series + r"CellsCorr_noline\\"
