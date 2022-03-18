@@ -93,7 +93,7 @@ data = ConcatDataset(datasets)
 N = len(data)
 train_size = 0.8 #proportion of training data
 batch_size = 8 #batch size
-m = 4 #amount of data per class in every batch
+m = batch_size//2 #amount of data per class in every batch
 
 
 #randomly shuffle indices
@@ -107,10 +107,12 @@ test_indices = indices[floor(train_size*N):]
 #split data into training data and test data
 train_split = Subset(data, train_indices)
 test_split = Subset(data, test_indices)
+train_labels = labels[train_indices]
+test_labels = labels[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
-train_sampler = MPerClassSampler(labels[train_indices], m, batch_size=batch_size, length_before_new_iter=100000)
-test_sampler = MPerClassSampler(labels[test_indices], m, batch_size=batch_size, length_before_new_iter=100000)
+train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
+test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #%% create dataloaders
 
