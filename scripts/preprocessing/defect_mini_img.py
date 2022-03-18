@@ -31,6 +31,7 @@ destination = series + r"Kernels\\"
 def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_origin,destination):
     #load image and mask
     mask = loadmat(direc + mask_origin + mask_name)['GTMask']
+    labels = loadmat(direc + mask_origin + mask_name)['GTLabel']
     img = mpimg.imread(direc+img_origin+img_name)
     try:
         N = mask.shape[2]
@@ -40,6 +41,7 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
     mask = np.reshape(mask,(mask.shape[0],mask.shape[1],N))
     for i in range(N):
         mask1 = mask[:,:,i]
+        label = labels[i][0][0]
         #resize mask
         output_size = img.shape[0]
         mask1 = resize(mask1,(300,300),anti_aliasing=True)
@@ -112,6 +114,6 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
         plt.show(fig)
         """
         
-        mpimg.imsave(direc+destination+"_defect"+ str(i) + img_name, defect_im,cmap = "gray")
+        mpimg.imsave(direc+destination+ label +"_defect"+ str(i) + img_name, defect_im,cmap = "gray")
 
 defect_im = defect_img(img_name,mask_name2,50,direc,series,mask_origin,img_origin,destination)
