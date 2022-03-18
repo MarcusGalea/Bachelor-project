@@ -11,8 +11,8 @@ import pandas as pd
 k = 0
 direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
-series = r"Series1\\"
-images = direc + series + r"CellsCorr_noline\\"
+series = r"Series6\\"
+images = direc + series + r"CellsCorr_resize\\"
 labels = direc + series + r"MaskGT\\"
 
 y = []

@@ -116,4 +116,11 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
         
         mpimg.imsave(direc+destination+ label +"_defect"+ str(i) + img_name, defect_im,cmap = "gray")
 
-defect_im = defect_img(img_name,mask_name2,50,direc,series,mask_origin,img_origin,destination)
+"""
+k = 0
+for pic in os.listdir(direc+origin):
+    print(k)
+    k +=1
+    if pic != "Thumbs.db":
+        defect_im = defect_img(pic,mask_name2,50,direc,series,mask_origin,img_origin,destination)
+"""

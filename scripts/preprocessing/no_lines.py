@@ -18,10 +18,10 @@ os.chdir(dname)
 direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
 
-series = r"Series2\\"
+series = r"Series6\\"
 origin = series + r"CellsCorr\\"
 
-destination = series + r"CellsCorr_noline\\"
+destination = series + r"CellsCorr_resize\\"
 
 
 import sys
@@ -35,6 +35,7 @@ for pic in os.listdir(direc+origin):
     k +=1
     if pic != "Thumbs.db":
         img = mpimg.imread(direc+origin+pic)
+        
         n,m = np.shape(img)
         binimg = np.zeros((n,m))
         threshold = np.quantile(img,q=0.30)
@@ -48,8 +49,9 @@ for pic in os.listdir(direc+origin):
         lines = find_lines(binimg,tol)
         img = remove_lines(img,lines)
         
+        
         img = resize(img, (300, 300))
         
-        mpimg.imsave(direc+destination+"_noline_"+pic, img,cmap = "gray")
+        mpimg.imsave(direc+destination+"_resize_"+pic, img,cmap = "gray")
         
         
