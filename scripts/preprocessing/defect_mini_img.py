@@ -19,11 +19,12 @@ os.chdir(dname)
 #mask_name2 = r'GT_Serie_2_Image_-4_3990_PC_Cell_Row5_Col_4'
 #img_name = r'Serie_2_ImageCorr_-1_3992_PC_Cell_Row7_Col_3.png'
 
-direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-series = r'Full_data\\'
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+series = r'AllSeries\\'
 
-img_origin = series + r"All_images\\"
-mask_origin = series + r'All_masks\\'
+img_origin = series + r"CellsCorr_resize\\"
+mask_origin = series + r'MaskGT\\'
 
 destination1 = series + r"Crack A\\"
 destination2 = series + r"Crack B\\"

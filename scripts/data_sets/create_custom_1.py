@@ -60,78 +60,81 @@ class ToTensor(object):
         image = image.permute((2,0,1))
         return image
 
-    
-data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
-                          img_dir = direc+series+r"CellsCorr_noline\\")
-
-labels = data.img_labels.to_numpy()[:,1]
-
-#%% Big dataset. Concatenate all data to the same dataset
-## Since creation of "AllSeries" folder, this part has become obsolete
-"""
-#choose series to include in data
-serieslist = [r"Series3\\",r"Series4\\",r"Series6\\"]
-datasets = [data]
-
-
-for series in serieslist:
-    #load data from series
-    newdata = CustomImageDataset(annotations_file = direc+series+"labels.csv",
+def load_data(data_dir= None):
+    data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
                               img_dir = direc+series+r"CellsCorr_noline\\")
-    #load labels from series
-    newlabels = newdata.img_labels.to_numpy()[:,1]
     
-    #concatenate data and labels to big dataset
-    labels = np.concatenate((labels,newlabels))
-    datasets.append(newdata)
-data = ConcatDataset(datasets)
+    labels = data.img_labels.to_numpy()[:,1]
+    
+    #%% Big dataset. Concatenate all data to the same dataset
+    ## Since creation of "AllSeries" folder, this part has become obsolete
+    """
+    #choose series to include in data
+    serieslist = [r"Series3\\",r"Series4\\",r"Series6\\"]
+    datasets = [data]
+    
+    
+    for series in serieslist:
+        #load data from series
+        newdata = CustomImageDataset(annotations_file = direc+series+"labels.csv",
+                                  img_dir = direc+series+r"CellsCorr_noline\\")
+        #load labels from series
+        newlabels = newdata.img_labels.to_numpy()[:,1]
+        
+        #concatenate data and labels to big dataset
+        labels = np.concatenate((labels,newlabels))
+        datasets.append(newdata)
+    data = ConcatDataset(datasets)
+    
+    #%% split data
+    """
+    
+    
+    #initialize sizes
+    N = len(data)
+    train_size = 0.8 #proportion of training data
+    batch_size = 8 #batch size
+    m = batch_size//2 #amount of data per class in every batch
+    
+    
+    #randomly shuffle indices
+    indices = list(range(N))
+    random.shuffle(indices)
+    #create indices for both training data and test data
+    train_indices = indices[:floor(train_size*N)]
+    test_indices = indices[floor(train_size*N):]
+    
+    
+    #split data into training data and test data
+    train_split = Subset(data, train_indices)
+    test_split = Subset(data, test_indices)
+    train_labels = labels[train_indices]
+    test_labels = labels[test_indices]
+    
+    #create sampler for each set of data, s.t each batch contains m of each class
+    train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
+    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=10000)
+    
+    #%% create dataloaders
+    
+    
+    #dataloader for training data
+    train_loader = DataLoader(
+        train_split,
+        shuffle=False,
+        num_workers=0,
+        sampler = train_sampler,
+        batch_size=batch_size
+    )
+    
+    #dataloader for test data
+    test_loader = DataLoader(
+        test_split,
+        shuffle=False,
+        num_workers=0,
+        sampler = test_sampler,
+        batch_size=batch_size
+    )
+    return train_loader, test_loader
 
-#%% split data
-"""
-
-
-#initialize sizes
-N = len(data)
-train_size = 0.8 #proportion of training data
-batch_size = 8 #batch size
-m = batch_size//2 #amount of data per class in every batch
-
-
-#randomly shuffle indices
-indices = list(range(N))
-random.shuffle(indices)
-#create indices for both training data and test data
-train_indices = indices[:floor(train_size*N)]
-test_indices = indices[floor(train_size*N):]
-
-
-#split data into training data and test data
-train_split = Subset(data, train_indices)
-test_split = Subset(data, test_indices)
-train_labels = labels[train_indices]
-test_labels = labels[test_indices]
-
-#create sampler for each set of data, s.t each batch contains m of each class
-train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
-test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
-
-#%% create dataloaders
-
-
-#dataloader for training data
-train_loader = DataLoader(
-    train_split,
-    shuffle=False,
-    num_workers=0,
-    sampler = train_sampler,
-    batch_size=batch_size
-)
-
-#dataloader for test data
-test_loader = DataLoader(
-    test_split,
-    shuffle=False,
-    num_workers=0,
-    sampler = test_sampler,
-    batch_size=batch_size
-)
+train_loader, test_loader = load_data(direc+series)
