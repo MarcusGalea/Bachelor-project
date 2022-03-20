@@ -52,8 +52,8 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
-series = r"AllSeries\\"
+direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+series = r"Full_data\\"
 
 #%%
 class CustomImageDataset(Dataset):
@@ -79,12 +79,12 @@ class CustomImageDataset(Dataset):
 
 #%%
 def load_data(data_dir= None):
-    data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
-                              img_dir = direc+series+r"CellsCorr_noline\\")
+    data = CustomImageDataset(annotations_file = direc+series+"all_labels.csv",
+                              img_dir = direc+series+r"All_images\\")
     
     labels = data.img_labels.to_numpy()[:,1]
     
-    #%% Big dataset. Concatenate all data to the same dataset
+    # Big dataset. Concatenate all data to the same dataset
     ## Since creation of "AllSeries" folder, this part has become obsolete
     """
     #choose series to include in data
@@ -133,7 +133,7 @@ def load_data(data_dir= None):
     train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
     test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=10000)
     
-    #%% create dataloaders
+    # create dataloaders
     
     
     #dataloader for training data
@@ -184,7 +184,7 @@ class Net(nn.Module):
 
 #%%
 def train_cifar(config, checkpoint_dir=None, data_dir=None):
-    net = Net(config["l1"], config["l2"])
+    net = Net(kernw = 50,l1 = config["l1"], l2 = config["l2"])
 
     device = "cpu"
     if torch.cuda.is_available():
@@ -217,7 +217,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None):
 
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels.type('torch.FloatTensor').reshape(-1,1))
             loss.backward()
             optimizer.step()
 
@@ -282,8 +282,8 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
-        "lr": tune.loguniform(1e-4, 1e-1),
-        "batch_size": tune.choice([2, 4, 8, 16])
+        "lr": tune.loguniform(1e-4, 1e-1)
+        #"batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
         metric="loss",
