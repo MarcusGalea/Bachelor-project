@@ -11,9 +11,9 @@ import pandas as pd
 k = 0
 direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
-series = r"Series6\\"
-images = direc + series + r"CellsCorr_resize\\"
-labels = direc + series + r"MaskGT\\"
+series = r"Full_data\\"
+images = direc + series + r"All_images\\"
+labels = direc + series + r"All_masks\\"
 
 y = []
 dic = {}
@@ -38,5 +38,5 @@ for label in os.listdir(labels):
         print("cells for "+txt+" are missing")
         continue
 
-pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)
+pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)
 

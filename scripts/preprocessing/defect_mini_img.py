@@ -15,17 +15,21 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-mask_name = r'GT_Serie_2_Image_-1_3992_PC_Cell_Row7_Col_3'
-mask_name2 = r'GT_Serie_2_Image_-4_3990_PC_Cell_Row5_Col_4'
-img_name = r'Serie_2_ImageCorr_-1_3992_PC_Cell_Row7_Col_3.png'
+#mask_name = r'GT_Serie_2_Image_-1_3992_PC_Cell_Row7_Col_3'
+#mask_name2 = r'GT_Serie_2_Image_-4_3990_PC_Cell_Row5_Col_4'
+#img_name = r'Serie_2_ImageCorr_-1_3992_PC_Cell_Row7_Col_3.png'
 
 direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-series = 'Series2\\'
+series = r'Full_data\\'
 
-img_origin = series + r"CellsCorr\\"
-mask_origin = series + r'MaskGT\\'
+img_origin = series + r"All_images\\"
+mask_origin = series + r'All_masks\\'
 
-destination = series + r"Kernels\\"
+destination1 = series + r"Crack A\\"
+destination2 = series + r"Crack B\\"
+destination3 = series + r"Crack C\\"
+destination4 = series + r"Finger Failure\\"
+
 
 
 def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_origin,destination):
@@ -35,7 +39,7 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
     img = mpimg.imread(direc+img_origin+img_name)
     try:
         N = mask.shape[2]
-    except NameError:
+    except IndexError:
         N = 1
         
     mask = np.reshape(mask,(mask.shape[0],mask.shape[1],N))
@@ -60,7 +64,12 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
         
         #Find max and min x and y coordinates
         coords = np.where(mask1 == 1)
-        min_y = min(coords[0])
+        try:
+            min_y = min(coords[0])
+            
+        except ValueError:
+            print(mask_name,'contained only zeros.')
+            continue
         max_y = max(coords[0])
         min_x = min(coords[1])
         max_x = max(coords[1])
@@ -116,11 +125,41 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
         
         mpimg.imsave(direc+destination+ label +"_defect"+ str(i) + img_name, defect_im,cmap = "gray")
 
-"""
+
 k = 0
-for pic in os.listdir(direc+origin):
+for mask in os.listdir(direc+mask_origin):
     print(k)
     k +=1
-    if pic != "Thumbs.db":
-        defect_im = defect_img(pic,mask_name2,50,direc,series,mask_origin,img_origin,destination)
-"""
+    txt = mask.split("Image")
+    
+    img_name = '_resize' + txt[0][2:] + 'ImageCorr' + txt[1][:-4] + '.png'
+    
+    defect_im = defect_img(img_name,mask,50,direc,series,mask_origin,img_origin,destination1)
+
+#%% Sort files into different folders
+import shutil
+
+direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+series = r'Full_data\\'
+
+img_origin = series + r"All_images\\"
+mask_origin = series + r'All_masks\\'
+
+destination2 = direc + series + r"Crack B\\"
+destination3 = direc + series + r"Crack C\\"
+destination4 = direc + series + r"Finger Failure\\"
+
+
+for file_name in os.listdir(direc + series + 'Crack A'):
+    if 'Crack B' in file_name:
+        source = direc + series + 'Crack A\\' + file_name
+        shutil.move(source, destination2)
+        print('Moved: ', file_name)
+    if 'Crack C' in file_name:
+        source = direc + series + 'Crack A\\' + file_name
+        shutil.move(source, destination3)
+        print('Moved: ', file_name)
+    if 'Finger Failure' in file_name:
+        source = direc + series + 'Crack A\\' + file_name
+        shutil.move(source, destination4)
+        print('Moved: ', file_name)
