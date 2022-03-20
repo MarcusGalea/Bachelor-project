@@ -25,8 +25,8 @@ import random
 
 
 #direc = r"C:\Users\aleks\OneDrive\Dokumenter\GitHub\Bachelor-project--defect-detection-on-solar-panels\data\\"
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
-series = r"Series3\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
@@ -64,14 +64,14 @@ class ToTensor(object):
 data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
                           img_dir = direc+series+r"CellsCorr_noline\\")
 
-
+labels = data.img_labels.to_numpy()[:,1]
 
 #%% Big dataset. Concatenate all data to the same dataset
-
+## Since creation of "AllSeries" folder, this part has become obsolete
+"""
 #choose series to include in data
 serieslist = [r"Series3\\",r"Series4\\",r"Series6\\"]
 datasets = [data]
-labels = data.img_labels.to_numpy()[:,1]
 
 
 for series in serieslist:
@@ -84,10 +84,11 @@ for series in serieslist:
     #concatenate data and labels to big dataset
     labels = np.concatenate((labels,newlabels))
     datasets.append(newdata)
-
 data = ConcatDataset(datasets)
 
 #%% split data
+"""
+
 
 #initialize sizes
 N = len(data)

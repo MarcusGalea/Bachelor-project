@@ -7,11 +7,23 @@ Created on Wed Mar  2 12:49:47 2022
 
 import os
 import pandas as pd
+from pathlib import Path
+
+
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+
+pathname = Path(dname)
+pathname = pathname.parent.absolute()
+direc = pathname.parent.absolute()
+os.chdir(direc)
+#%%
 
 k = 0
-direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
-series = r"Series6\\"
+#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
+series = r"AllSeries\\"
 images = direc + series + r"CellsCorr_resize\\"
 labels = direc + series + r"MaskGT\\"
 
@@ -23,20 +35,21 @@ n = 10
 m = 6
 for pic in os.listdir(images):
     if pic != "Thumbs.db":
+        serie = pic.split("_")[3]
         txt = pic.split("Corr")[1]
         txt = txt.split(".")[0]
-        dic[txt] = k
+        dic[serie+txt] = k
         y.append([pic,0])
         k += 1
 
 for label in os.listdir(labels):
+    serie = label.split("_")[2]
     txt = label.split("Image")[1]
     txt = txt.split(".")[0]
     try:
-        y[dic[txt]][1] = 1
+        y[dic[serie+txt]][1] = 1
     except KeyError:
         print("cells for "+txt+" are missing")
         continue
 
-pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)
-
+pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)

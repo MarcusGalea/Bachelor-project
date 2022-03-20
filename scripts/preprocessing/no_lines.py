@@ -15,10 +15,10 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 
-direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 
-series = r"Series6\\"
+series = r"AllSeries\\"
 origin = series + r"CellsCorr\\"
 
 destination = series + r"CellsCorr_resize\\"
@@ -27,14 +27,22 @@ destination = series + r"CellsCorr_resize\\"
 import sys
 sys.path.insert(1, direc+'scripts')
 from functions import *
+import cv2 as cv
 import matplotlib.pyplot as plt
 
 k = 0
+N = len(os.listdir(direc+origin))
 for pic in os.listdir(direc+origin):
-    print(k)
+    print(k/N*100)
     k +=1
     if pic != "Thumbs.db":
-        img = mpimg.imread(direc+origin+pic)
+        img = cv.imread(direc+origin+pic)[:,:,0]
+
+        n = 300
+        m = n
+        img = resize(img, (n, m))
+        """
+        plt.imshow(img, cmap = "gray")
         
         n,m = np.shape(img)
         binimg = np.zeros((n,m))
@@ -48,10 +56,9 @@ for pic in os.listdir(direc+origin):
         tol = 0.3
         lines = find_lines(binimg,tol)
         img = remove_lines(img,lines)
-        
-        
-        img = resize(img, (300, 300))
+        """
         
         mpimg.imsave(direc+destination+"_resize_"+pic, img,cmap = "gray")
+
         
         
