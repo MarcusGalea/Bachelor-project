@@ -26,18 +26,22 @@ series = r'AllSeries\\'
 img_origin = series + r"CellsCorr_resize\\"
 mask_origin = series + r'MaskGT\\'
 
-destination1 = series + r"Crack A\\"
-destination2 = series + r"Crack B\\"
-destination3 = series + r"Crack C\\"
-destination4 = series + r"Finger Failure\\"
+
+name = r"Kernels\\"
+destination = series + name + r"All Defects\\"
+destination1 = series + name + r"Crack A\\"
+destination2 = series + name +r"Crack B\\"
+destination3 = series + name +r"Crack C\\"
+destination4 = series + name +r"Finger Failure\\"
 
 
-
+avg = mpimg.imread(direc+series+"_average_cell.png")
 def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_origin,destination):
     #load image and mask
     mask = loadmat(direc + mask_origin + mask_name)['GTMask']
     labels = loadmat(direc + mask_origin + mask_name)['GTLabel']
     img = mpimg.imread(direc+img_origin+img_name)
+    img = img[:,:,0]-avg[:,:,0]
     try:
         N = mask.shape[2]
     except IndexError:
@@ -135,23 +139,24 @@ for mask in os.listdir(direc+mask_origin):
     
     img_name = '_resize' + txt[0][2:] + 'ImageCorr' + txt[1][:-4] + '.png'
     
-    defect_im = defect_img(img_name,mask,50,direc,series,mask_origin,img_origin,destination1)
+    defect_im = defect_img(img_name,mask,50,direc,series,mask_origin,img_origin,destination)
 
 #%% Sort files into different folders
 import shutil
 
-direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-series = r'Full_data\\'
 
-img_origin = series + r"All_images\\"
-mask_origin = series + r'All_masks\\'
+img_origin = series + r"CellsCorr\\"
+#img_origin = series + r"All_images\\"
+
+mask_origin = series + r'MaskGT\\'
+#mask_origin = series + r'All_masks\\'
 
 destination2 = direc + series + r"Crack B\\"
 destination3 = direc + series + r"Crack C\\"
 destination4 = direc + series + r"Finger Failure\\"
 
 
-for file_name in os.listdir(direc + series + 'Crack A'):
+for file_name in os.listdir(direc + series + ""):
     if 'Crack B' in file_name:
         source = direc + series + 'Crack A\\' + file_name
         shutil.move(source, destination2)

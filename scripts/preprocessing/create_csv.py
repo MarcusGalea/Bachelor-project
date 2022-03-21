@@ -52,4 +52,4 @@ for label in os.listdir(labels):
         print("cells for "+txt+" are missing")
         continue
 
-pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)
+pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)

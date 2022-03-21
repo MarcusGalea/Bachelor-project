@@ -62,7 +62,7 @@ class ToTensor(object):
 
 def load_data(data_dir= None):
     data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
-                              img_dir = direc+series+r"CellsCorr_noline\\")
+                              img_dir = direc+series+r"CellsCorr_resize\\")
     
     labels = data.img_labels.to_numpy()[:,1]
     

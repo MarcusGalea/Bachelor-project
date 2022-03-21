@@ -37,12 +37,10 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        print("percentage through data", i/N," loss ",float(sum((outputs- labels.type('torch.FloatTensor').reshape(-1,1))**2)[0]))
-        """
+
         if i % printfreq == printfreq-1:    # print every 2000 mini-batches
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
             running_loss = 0.0
-        """
 
 print('Finished Training')
 
