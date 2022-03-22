@@ -32,13 +32,13 @@ series = r'AllSeries\\'
 img_origin = series + r"CellsCorr_resize\\"
 mask_origin = series + r'MaskGT\\'
 
-
-name = r"Kernels\\"
-destination = series + name + r"All Defects\\"
-destination1 = series + name + r"Crack A\\"
-destination2 = series + name +r"Crack B\\"
-destination3 = series + name +r"Crack C\\"
-destination4 = series + name +r"Finger Failure\\"
+#extra folder for marcus
+series += r"Kernels\\"
+destination = direc+ series + r"All Defects\\"
+destination1 = direc + series  + r"Crack A\\"
+destination2 = direc + series +r"Crack B\\"
+destination3 = direc + series +r"Crack C\\"
+destination4 = direc + series +r"Finger Failure\\"
 
 
 avg = mpimg.imread(direc+series+"_average_cell.png")
@@ -167,12 +167,8 @@ img_origin = series + r"CellsCorr\\"
 mask_origin = series + r'MaskGT\\'
 #mask_origin = series + r'All_masks\\'
 
-destination2 = direc + series + r"Crack B\\"
-destination3 = direc + series + r"Crack C\\"
-destination4 = direc + series + r"Finger Failure\\"
 
-
-for file_name in os.listdir(direc + series + ""):
+for file_name in os.listdir(destination1):
     if 'Crack B' in file_name:
         source = direc + series + 'Crack A\\' + file_name
         shutil.move(source, destination2)
