@@ -15,6 +15,7 @@ parent_folder = pathname.parent.absolute()
 os.chdir(dname)
 from NN import *
 
+
 #%% Training
 
 printfreq = 20

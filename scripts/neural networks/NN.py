@@ -31,7 +31,8 @@ from torchvision.io import read_image
 
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 
-series = r"AllSeries\Kernels\PC\\"
+series = r"AllSeries\\"
+kernel = r"Kernels\PC\\"
 defect = r"All Defects\\"
 
 class Net(nn.Module):
@@ -72,14 +73,15 @@ class Net(nn.Module):
         return x
 
 
-PC_link = direc+series+defect
+
+PC_link = direc+series+kernel+defect
 
 k = -1
 weights = torch.zeros(10,1,50,50)
 biases = torch.zeros(10)
 
 for PC in os.listdir(PC_link):
-    PC = read_image(direc+series + defect+PC)
+    PC = read_image(PC_link + PC)
     PC = PC[0:1].type(torch.FloatTensor)
     PC /= np.linalg.norm(PC)
     if k == -1:
@@ -97,43 +99,64 @@ net = Net(kernw = 50,
           biases = biases
           )
 
+avg_im = read_image(direc + series+"_average_cell.png")[0]
+
+device = "cpu"
+"""
+if torch.cuda.is_available():
+    device = "cuda:0"
+    if torch.cuda.device_count() > 1:
+        print(device)
+        net = nn.DataParallel(net)
+"""
+#net.to(device)
+
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(),lr =0.00709694)
 
-
-
 #%% show kernels
-plt.imshow(net.conv1.weight.detach().numpy()[4][0],cmap = "gray")
+#plt.imshow(net.conv1.weight.detach().numpy()[0][0],cmap = "gray")
 #plt.imshow(convolutions[8][0],cmap = "gray")
+plt.imshow(avg_im,cmap = "gray")
 #%% Training
 
-printfreq = 20
-N = len(train_loader)
-for epoch in range(2):  # loop over the dataset multiple times
+import multiprocessing as mp
+import torch.multiprocessing as mp_t
 
-    running_loss = 0.0
-    for i, datas in enumerate(train_loader):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = datas
+def main():
+    printfreq = 20
+    N = len(train_loader)
+    for epoch in range(2):  # loop over the dataset multiple times
+    
+        running_loss = 0.0
+        for i, datas in enumerate(train_loader):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = datas
+            inputs -= avg_im
+            inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
+            #labels = labels.to(device)
+    
+            # zero the parameter gradients
+            optimizer.zero_grad()
+    
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs.reshape(1,-1),labels.type(torch.float).reshape(1,-1))
+            loss.backward()
+            optimizer.step()
+    
+            # print statistics
+            running_loss += loss.item()
+    
+            if i % printfreq == printfreq-1:    # print every 2000 mini-batches
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
+                running_loss = 0.0
+    
+    print('Finished Training')
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
 
-        # forward + backward + optimize
-        outputs = net(inputs)
-        loss = criterion(outputs.reshape(1,-1),labels.type(torch.float).reshape(1,-1))
-        loss.backward()
-        optimizer.step()
 
-        # print statistics
-        running_loss += loss.item()
-
-        if i % printfreq == printfreq-1:    # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
-            running_loss = 0.0
-
-print('Finished Training')
-
+main()
 
 #%% Testing
 correct = 0

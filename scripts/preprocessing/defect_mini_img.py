@@ -13,11 +13,17 @@ from scipy.io import loadmat
 import cv2
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
 
-#mask_name = r'GT_Serie_2_Image_-1_3992_PC_Cell_Row7_Col_3'
-#mask_name2 = r'GT_Serie_2_Image_-4_3990_PC_Cell_Row5_Col_4'
-#img_name = r'Serie_2_ImageCorr_-1_3992_PC_Cell_Row7_Col_3.png'
+from pathlib import Path
+pathname = Path(dname)
+parent_folder = pathname.parent.absolute()
+os.chdir(parent_folder)
+
+#%%
+from preprocessing.create_csv import dic,y
+from data_sets.create_custom_1 import train_indices
+#%%
+
 
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 #direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
@@ -135,11 +141,21 @@ k = 0
 for mask in os.listdir(direc+mask_origin):
     print(k)
     k +=1
+    
+    serie = mask.split("_")[2]
+    
     txt = mask.split("Image")
     
-    img_name = '_resize' + txt[0][2:] + 'ImageCorr' + txt[1][:-4] + '.png'
+    dic_txt = txt[1]
+    dic_txt = dic_txt.split(".")[0]
+    label_idx = dic[serie+dic_txt]
     
-    defect_im = defect_img(img_name,mask,50,direc,series,mask_origin,img_origin,destination)
+    if y[label_idx] == 0:
+        continue
+    elif label_idx in train_indices:
+        img_name = '_resize' + txt[0][2:] + 'ImageCorr' + txt[1][:-4] + '.png'
+        defect_im = defect_img(img_name,mask,50,direc,series,mask_origin,img_origin,destination)       
+
 
 #%% Sort files into different folders
 import shutil
