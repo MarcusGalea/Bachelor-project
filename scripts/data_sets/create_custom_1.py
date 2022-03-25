@@ -46,7 +46,7 @@ class CustomImageDataset(Dataset):
             image = self.transform(image)
         if self.target_transform:
             label = self.target_transform(label)
-        return image[0:1].type(torch.FloatTensor), label, img_path
+        return image[0:1].type(torch.FloatTensor), label
 
 
 class ToTensor(object):

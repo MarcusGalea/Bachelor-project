@@ -9,29 +9,86 @@ import numpy as np
 import os
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
+from itertools import islice
+from csv import reader
 
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+"""
+from pathlib import Path
+pathname = Path(dname)
+parent_folder = pathname.parent.absolute()
+os.chdir(parent_folder)
+
+from data_sets.create_custom_1 import test_loader
+"""
+#%%
 
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\Full_data\\'
 
-series = r"AllSeries\\"
-kernel = r"Kernels\PC\\"
+
+series = r"AllSeries\Kernels\\"
+
+destination = r'PC\\'
+
 defects = [r"Crack A\\",r"Crack B\\",r"Crack C\\", r"Finger Failure\\"]
-PC_link = direc+series+kernel
 
 
-weights = np.zeros((4,10,50,50))
-avg = np.zeros((4,50,50))
+
+N_PCs = 2
+PCs = np.zeros((4,N_PCs,50*50))
 
 
 for i,defect in enumerate(defects):
-    k = -1
-    for PC in os.listdir(PC_link+defect):
-        PC = mpimg.imread(PC_link+defect + PC)
-        PC = PC[0:1]
-        PC /= np.linalg.norm(PC)
-        if k == -1:
+    defect = defect.split("\\")[0].split(" ")[0]+"_"+defect.split("\\")[0].split(" ")[1]
+    with open(direc+series+destination+defect+"_PC.csv") as file_name:
+        # pass the file object to reader() to get the reader object
+        csv_reader = reader(file_name)
+        # Iterate over each row in the csv using reader object
+        k = 0
+        for row in csv_reader:
+            if k == N_PCs:
+                break
+            PCs[i,k,:] = np.array(row,dtype=np.float32)
             k+= 1
-            avg[i] = PC
-            continue
-        weights[i][k] = PC
-        k+= 1
+
+#%%
+N_samples = 100
+N_classes = 4
+distances = np.zeros((N_samples*N_classes,N_classes))
+
+for i,defect in enumerate(defects[:N_classes]): #loop over defect type
+    for j,kernel in enumerate(os.listdir(direc+series+defect)): #loop over images in defect
+        if j == N_samples:
+            break
+        f_name = direc + series+defect+kernel
+        Gamma = mpimg.imread(f_name)[:,:,0]
+        #plt.imshow(Gamma,cmap = "gray")
+        #plt.show()
+        proj = np.zeros(2500)
+        for k in range(N_classes): #test image for each defect type
+            for l in range(N_PCs): #loop over Principal components
+                PC = PCs[k,l,:]
+                if l == 0:
+                    avg = PC
+                    Omega = Gamma.flatten() - PC
+
+                else:
+                    omega= np.dot(Omega,PC)
+                    proj += omega*PC
+                    
+            #plt.imshow((proj+avg).reshape((50,50)),cmap = "gray")
+            #plt.show()
+            
+            distance = np.linalg.norm(proj-Omega)
+            distances[i*N_samples+j,k] = distance
+
+#%%
+
+Crack_x = 0
+Crack_y = 1
+plt.plot(distances[:N_samples,0],distances[:N_samples,1],'*',label = "Crack A")
+plt.plot(distances[N_samples:,0],distances[N_samples:,1],'*', label = "Crack B")    
+plt.legend()

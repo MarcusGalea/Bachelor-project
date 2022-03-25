@@ -117,6 +117,7 @@ plt.imshow(net(inputs)[1][0].detach().numpy(),cmap = "gray")
 #%% Training
 
 printfreq = 20
+
 N = len(train_loader)
 for epoch in range(2):  # loop over the dataset multiple times
 

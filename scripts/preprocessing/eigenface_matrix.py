@@ -18,7 +18,11 @@ os.chdir(dname)
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 
 series = r"AllSeries\Kernels\\"
-defect = r"Crack C\\"
+defect = r"Crack A\\"
+
+destination = r'PC\\'
+
+defect_name = defect.split("\\")[0].split(" ")[0]+"_"+defect.split("\\")[0].split(" ")[1]
 
 #initialize array
 A = np.array([])
@@ -41,6 +45,8 @@ Y = A - np.tile(mean.reshape(-1,1),(1,M))
 M = Y@Y.T
 
 U,S,Vh = svd(M,full_matrices=False)
+Vh = np.vstack((mean,Vh))
+np.savetxt(direc+series+destination+defect_name+"_PC.csv",Vh,delimiter = ',')
 
 #%%
 rho = (S*S) / (S*S).sum() 
@@ -50,7 +56,6 @@ plt.plot(np.arange(0,n+1),np.hstack(([0],rho.cumsum()[:10])))
 # Compute the projection onto the principal components
 Z = U*S;
 
-
 #%%
 import matplotlib.image as mpimg
 from matplotlib.pyplot import cm
@@ -58,7 +63,6 @@ from matplotlib.pyplot import cm
 N_k = int(np.sqrt(N))
 
 
-destination = r'PC\\'
 mpimg.imsave(direc + series +destination + defect + 'avg.png',mean.reshape(N_k,N_k),cmap=cm.gray)
 #save the n first kernels
 for i in range(10):
@@ -74,15 +78,17 @@ plt.imshow(im1,cmap = "gray")
 
 Omega = gamma - mean
 
-N_PC = 10
+N_PC = 40
 omega = np.zeros(N_PC)
 proj = np.zeros((50,50))
 
-for i in range(N_PC):
+for i in range(1,N_PC):
     omega[i] = np.dot(Omega,Vh[i,:])
     proj += omega[i]*Vh[i,:].reshape(50,50)
     
+proj+=mean.reshape(50,50)
 #%%
+
 plt.imshow(proj,cmap = "gray")
 error = np.linalg.norm(im1-proj)
 print(error)

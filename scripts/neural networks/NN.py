@@ -51,25 +51,23 @@ class Net(nn.Module):
         self.conv2 = nn.Conv2d(kernlayers, 2*kernlayers, kernw//2)
         self.fc1 = nn.Linear((((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
-        self.fc3 = nn.Linear(l2, 1)
-        self.sig = nn.Sigmoid()
-        self.init_weights(weights,biases)
+        self.fc3 = nn.Linear(l2, 2)
+        #self.init_weights(weights,biases)
     
     def init_weights(self,weights,biases):
         with torch.no_grad():
             if len(weights) > 0:
                 self.conv1.weight = nn.Parameter(weights)
-                print(weights)
             if len(biases) > 0:
                 self.conv1.bias = nn.Parameter(biases)
                 
     def forward(self, x):
-        x = self.pool(self.conv1(x))
+        x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.sig(self.fc3(x))
+        x = self.fc3(x)
         return x
 
 
@@ -112,51 +110,54 @@ if torch.cuda.is_available():
 #net.to(device)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(net.parameters(),lr =0.00709694)
+optimizer = torch.optim.SGD(net.parameters(),lr =0.001,momentum = 0.9)
 
 #%% show kernels
 #plt.imshow(net.conv1.weight.detach().numpy()[0][0],cmap = "gray")
 #plt.imshow(convolutions[8][0],cmap = "gray")
 plt.imshow(avg_im,cmap = "gray")
+#%%
+for i, datas in enumerate(train_loader):
+    inputs, labels = datas
+
 #%% Training
 
-import multiprocessing as mp
-import torch.multiprocessing as mp_t
+#import multiprocessing as mp
+#import torch.multiprocessing as mp_t
 
-def main():
-    printfreq = 20
-    N = len(train_loader)
-    for epoch in range(2):  # loop over the dataset multiple times
-    
-        running_loss = 0.0
-        for i, datas in enumerate(train_loader):
-            # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = datas
-            inputs -= avg_im
+printfreq = 20
+N = len(train_loader)
+
+for epoch in range(2):  # loop over the dataset multiple times
+
+    running_loss = 0.0
+    for i, datas in enumerate(train_loader):
+        # get the inputs; data is a list of [inputs, labels]
+        inputs, labels = datas
+        inputs /= 255
+        #inputs -= avg_im
+        if device == "cuda:0":
             inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
-            #labels = labels.to(device)
-    
-            # zero the parameter gradients
-            optimizer.zero_grad()
-    
-            # forward + backward + optimize
-            outputs = net(inputs)
-            loss = criterion(outputs.reshape(1,-1),labels.type(torch.float).reshape(1,-1))
-            loss.backward()
-            optimizer.step()
-    
-            # print statistics
-            running_loss += loss.item()
-    
-            if i % printfreq == printfreq-1:    # print every 2000 mini-batches
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
-                running_loss = 0.0
-    
-    print('Finished Training')
+        #labels = labels.to(device)
 
+        # zero the parameter gradients
+        optimizer.zero_grad()
 
+        # forward + backward + optimize
+        outputs = net(inputs)
+        loss = criterion(outputs,labels)
+        loss.backward()
+        optimizer.step()
 
-main()
+        # print statistics
+        running_loss += loss.item()
+
+        if i % printfreq == printfreq-1:    # print every 2000 mini-batches
+            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
+            running_loss = 0.0
+
+print('Finished Training')
+
 
 #%% Testing
 correct = 0
