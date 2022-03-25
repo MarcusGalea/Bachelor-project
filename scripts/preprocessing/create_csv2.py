@@ -8,9 +8,9 @@ from scipy.io import loadmat
 k = 0
 direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
-series = r"Full_data\\"
-images = direc + series + r"All_images\\"
-labels = direc + series + r"All_masks\\"
+series = r"AllSeries\\"
+images = direc + series + r"CellsCorr_resize\\"
+labels = direc + series + r"MaskGT\\"
 
 y = []
 dic = {}
@@ -34,9 +34,15 @@ for label in os.listdir(labels):
     vec = np.zeros(4)
     #vec = [Crack A, Crack B, Crack C, Finger Failure]
     mat_label = loadmat(labels + label)['GTLabel']
+    mask = loadmat(labels + label)['GTMask']
+    mask = np.reshape(mask,(mask.shape[0],mask.shape[1],len(mat_label)))
+
     try:
         for i in range(len(mat_label)):
             #print(mat_label[i][0][0])
+            if sum(sum(mask[:,:,i])) == 0:
+                print(label)
+                continue
             if mat_label[i][0][0] == 'Finger Failure':
                y[dic[txt]][1][3]  = 1
             if mat_label[i][0][0] == 'Crack A':
