@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Mar 14 14:45:27 2022
+Created on Fri Mar 25 09:09:45 2022
 
 @author: Marcu
 """
@@ -12,40 +12,30 @@ dname = os.path.dirname(abspath)
 
 pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
-os.chdir(dname)
-from NN import *
+os.chdir(parent_folder)
 
+#get dataloader
+from data_sets.create_custom_1 import train_loader,test_loader
+from neural_networks.NN import *
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+from torchvision.io import read_image
 
-#%% Training
+#%%
+PATH = "NN_1.pt"
 
-printfreq = 20
-N = len(train_loader)
-for epoch in range(2):  # loop over the dataset multiple times
+if device == "cuda:0":
+    net.load_state_dict(torch.load(PATH))
+elif device == "cpu":
+    net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
 
-    running_loss = 0.0
-    for i, datas in enumerate(train_loader):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = datas
-
-        # zero the parameter gradients
-        optimizer.zero_grad()
-
-        # forward + backward + optimize
-        outputs = net(inputs)
-        loss = criterion(outputs, labels.type('torch.FloatTensor').reshape(-1,1))
-        loss.backward()
-        optimizer.step()
-
-        # print statistics
-        running_loss += loss.item()
-
-        if i % printfreq == printfreq-1:    # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
-            running_loss = 0.0
-
-print('Finished Training')
-
-
+net.eval()
 #%% Testing
 correct = 0
 total = 0
@@ -53,8 +43,12 @@ total = 0
 with torch.no_grad():
     for i, data in enumerate(test_loader, 0):
         images, labels = data
+        if device == "cuda:0":
+            images = images.type(torch.cuda.FloatTensor)#.to(device)
+            labels = labels.type(torch.cuda.LongTensor)
         # calculate outputs by running images through the network
         outputs = net(images)
+
         # the class with the highest energy is what we choose as prediction
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
@@ -73,6 +67,9 @@ total_pred = {classname: 0 for classname in classes}
 with torch.no_grad():
     for data in test_loader:
         images, labels = data
+        if device == "cuda:0":
+            images = images.type(torch.cuda.FloatTensor)#.to(device)
+            labels = labels.type(torch.cuda.LongTensor)  
         outputs = net(images)
         _, predictions = torch.max(outputs, 1)
         # collect the correct predictions for each class

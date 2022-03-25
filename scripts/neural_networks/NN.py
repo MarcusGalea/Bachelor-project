@@ -52,6 +52,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear((((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
+        self.sig = nn.Sigmoid()
         #self.init_weights(weights,biases)
     
     def init_weights(self,weights,biases):
@@ -100,111 +101,19 @@ net = Net(kernw = 50,
 avg_im = read_image(direc + series+"_average_cell.png")[0]
 
 device = "cpu"
-"""
+
 if torch.cuda.is_available():
     device = "cuda:0"
     if torch.cuda.device_count() > 1:
         print(device)
         net = nn.DataParallel(net)
-"""
-#net.to(device)
+
+net.to(device)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(net.parameters(),lr =0.001,momentum = 0.9)
+optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
 
 #%% show kernels
-#plt.imshow(net.conv1.weight.detach().numpy()[0][0],cmap = "gray")
+plt.imshow(net.conv1.weight.cpu().detach().numpy()[0][0],cmap = "gray")
 #plt.imshow(convolutions[8][0],cmap = "gray")
-plt.imshow(avg_im,cmap = "gray")
-#%%
-for i, datas in enumerate(train_loader):
-    inputs, labels = datas
-
-#%% Training
-
-#import multiprocessing as mp
-#import torch.multiprocessing as mp_t
-
-printfreq = 20
-N = len(train_loader)
-
-for epoch in range(2):  # loop over the dataset multiple times
-
-    running_loss = 0.0
-    for i, datas in enumerate(train_loader):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = datas
-        inputs /= 255
-        #inputs -= avg_im
-        if device == "cuda:0":
-            inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
-        #labels = labels.to(device)
-
-        # zero the parameter gradients
-        optimizer.zero_grad()
-
-        # forward + backward + optimize
-        outputs = net(inputs)
-        loss = criterion(outputs,labels)
-        loss.backward()
-        optimizer.step()
-
-        # print statistics
-        running_loss += loss.item()
-
-        if i % printfreq == printfreq-1:    # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
-            running_loss = 0.0
-
-print('Finished Training')
-
-
-#%% Testing
-correct = 0
-total = 0
-# since we're not training, we don't need to calculate the gradients for our outputs
-with torch.no_grad():
-    for i, data in enumerate(test_loader, 0):
-        images, labels = data
-        # calculate outputs by running images through the network
-        outputs = net(images)
-        # the class with the highest energy is what we choose as prediction
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-        print(100*correct//total)
-
-print(f'Accuracy of the network on the test images: {100 * correct // total} %')
-
-#%%
-classes = ('No Defect','Defect')
-# prepare to count predictions for each class
-correct_pred = {classname: 0 for classname in classes}
-total_pred = {classname: 0 for classname in classes}
-
-# again no gradients needed
-with torch.no_grad():
-    for data in test_loader:
-        images, labels = data
-        outputs = net(images)
-        _, predictions = torch.max(outputs, 1)
-        # collect the correct predictions for each class
-        for label, prediction in zip(labels, predictions):
-            if label == prediction:
-                correct_pred[classes[label]] += 1
-            total_pred[classes[label]] += 1
-
-# print accuracy for each class
-for classname, correct_count in correct_pred.items():
-    accuracy = 100 * float(correct_count) / total_pred[classname]
-    print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
-    
-#%% save/load model 
-torch.save(net.state_dict(), dname)
-
-net = Net()
-net.load_state_dict(torch.load(dname))
-net.eval()
-
-#%% plots
-plt.imshow(net.conv1.weight[5][0].cpu().detach().numpy(),cmap = "gray")
+#plt.imshow(avg_im,cmap = "gray")
