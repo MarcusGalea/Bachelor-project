@@ -68,27 +68,6 @@ data = CustomImageDataset(annotations_file = direc+series+"all_labels.csv",
 labels = data.img_labels.to_numpy()[:,1]
 
 
-## Since creation of "AllSeries" folder, this part has become obsolete
-"""
-#choose series to include in data
-serieslist = [r"Series3\\",r"Series4\\",r"Series6\\"]
-datasets = [data]
-
-
-for series in serieslist:
-    #load data from series
-    newdata = CustomImageDataset(annotations_file = direc+series+"labels.csv",
-                              img_dir = direc+series+r"CellsCorr_noline\\")
-    #load labels from series
-    newlabels = newdata.img_labels.to_numpy()[:,1]
-    
-    #concatenate data and labels to big dataset
-    labels = np.concatenate((labels,newlabels))
-    datasets.append(newdata)
-data = ConcatDataset(datasets)
-
-#%% split data
-"""
 
 #seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
 random.seed(10)

@@ -15,14 +15,14 @@ from csv import reader
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-"""
+
 from pathlib import Path
 pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
 from data_sets.create_custom_1 import test_loader
-"""
+
 #%%
 
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
@@ -37,7 +37,7 @@ defects = [r"Crack A\\",r"Crack B\\",r"Crack C\\", r"Finger Failure\\"]
 
 
 
-N_PCs = 2
+N_PCs = 100
 PCs = np.zeros((4,N_PCs,50*50))
 
 
@@ -56,17 +56,19 @@ for i,defect in enumerate(defects):
 
 #%%
 N_samples = 100
-N_classes = 4
+N_classes = 2
 distances = np.zeros((N_samples*N_classes,N_classes))
 
-for i,defect in enumerate(defects[:N_classes]): #loop over defect type
+for i,defect in enumerate(defects[1:N_classes]): #loop over defect type
+    print("defect " + defect)
     for j,kernel in enumerate(os.listdir(direc+series+defect)): #loop over images in defect
         if j == N_samples:
             break
         f_name = direc + series+defect+kernel
         Gamma = mpimg.imread(f_name)[:,:,0]
-        #plt.imshow(Gamma,cmap = "gray")
-        #plt.show()
+        plt.imshow(Gamma,cmap = "gray")
+        plt.title("Image")
+        plt.show()
         proj = np.zeros(2500)
         for k in range(N_classes): #test image for each defect type
             for l in range(N_PCs): #loop over Principal components
@@ -79,12 +81,17 @@ for i,defect in enumerate(defects[:N_classes]): #loop over defect type
                     omega= np.dot(Omega,PC)
                     proj += omega*PC
                     
-            #plt.imshow((proj+avg).reshape((50,50)),cmap = "gray")
-            #plt.show()
+            plt.imshow((proj+avg).reshape((50,50)),cmap = "gray")
+            plt.title(["classs" + str(k)])
+            plt.show()
             
             distance = np.linalg.norm(proj-Omega)
+            print("distance to class "+str(k) + " is "+ str(distance))
             distances[i*N_samples+j,k] = distance
+        break
+    break
 
+            
 #%%
 
 Crack_x = 0
