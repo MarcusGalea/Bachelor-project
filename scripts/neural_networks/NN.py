@@ -110,7 +110,13 @@ if torch.cuda.is_available():
 
 net.to(device)
 
-criterion = nn.CrossEntropyLoss()
+
+w = torch.tensor([1.,10.])
+if device == "cuda:0":
+    w = w.type(torch.cuda.FloatTensor)#.to(device)
+
+criterion = nn.CrossEntropyLoss(weight=w)
+
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
 
 #%% show kernels

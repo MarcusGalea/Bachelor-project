@@ -37,7 +37,7 @@ defects = [r"Crack A\\",r"Crack B\\",r"Crack C\\", r"Finger Failure\\"]
 
 
 
-N_PCs = 100
+N_PCs = 200
 PCs = np.zeros((4,N_PCs,50*50))
 
 
@@ -56,18 +56,18 @@ for i,defect in enumerate(defects):
 
 #%%
 N_samples = 100
-N_classes = 2
+N_classes = 4
 distances = np.zeros((N_samples*N_classes,N_classes))
 
-for i,defect in enumerate(defects[1:N_classes]): #loop over defect type
-    print("defect " + defect)
+for i,defect in enumerate(defects[:N_classes]): #loop over defect type
+    #print("defect " + defect)
     for j,kernel in enumerate(os.listdir(direc+series+defect)): #loop over images in defect
         if j == N_samples:
             break
         f_name = direc + series+defect+kernel
         Gamma = mpimg.imread(f_name)[:,:,0]
-        plt.imshow(Gamma,cmap = "gray")
-        plt.title("Image")
+        #plt.imshow(Gamma,cmap = "gray")
+        #plt.title("Image")
         plt.show()
         proj = np.zeros(2500)
         for k in range(N_classes): #test image for each defect type
@@ -81,21 +81,18 @@ for i,defect in enumerate(defects[1:N_classes]): #loop over defect type
                     omega= np.dot(Omega,PC)
                     proj += omega*PC
                     
-            plt.imshow((proj+avg).reshape((50,50)),cmap = "gray")
-            plt.title(["classs" + str(k)])
-            plt.show()
+            #plt.imshow((proj+avg).reshape((50,50)),cmap = "gray")
+            #plt.title(["classs" + str(k)])
+            #plt.show()
             
             distance = np.linalg.norm(proj-Omega)
-            print("distance to class "+str(k) + " is "+ str(distance))
+            #print("distance to class "+str(k) + " is "+ str(distance))
             distances[i*N_samples+j,k] = distance
-        break
-    break
-
             
 #%%
 
-Crack_x = 0
+Crack_x = 2 
 Crack_y = 1
-plt.plot(distances[:N_samples,0],distances[:N_samples,1],'*',label = "Crack A")
-plt.plot(distances[N_samples:,0],distances[N_samples:,1],'*', label = "Crack B")    
+plt.plot(distances[Crack_x*N_samples:N_samples*(1+Crack_x),Crack_x],distances[Crack_x*N_samples:N_samples*(1+Crack_x),Crack_y],'*',label = defects[Crack_x])
+plt.plot(distances[Crack_y*N_samples:N_samples*(1+Crack_y),Crack_x],distances[Crack_y*N_samples:N_samples*(1+Crack_y),Crack_y],'*',label = defects[Crack_y])
 plt.legend()

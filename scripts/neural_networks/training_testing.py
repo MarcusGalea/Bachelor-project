@@ -24,7 +24,8 @@ from NN import *
 printfreq = 20
 N = len(train_loader)
 
-for epoch in range(101):  # loop over the dataset multiple times
+table = []
+for epoch in range(5):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, datas in enumerate(train_loader):
@@ -51,11 +52,11 @@ for epoch in range(101):  # loop over the dataset multiple times
 
         if i % printfreq == printfreq-1:    # print every 2000 mini-batches
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
+            table.append([epoch +1, i+1, running_loss / printfreq])
             running_loss = 0.0
 
 print('Finished Training')
 
-#%% save
-PATH = "NN_1_BAERBAR.pt"
+PATH = "NN_1_2.pt"
 torch.save(net.state_dict(), PATH)
 
