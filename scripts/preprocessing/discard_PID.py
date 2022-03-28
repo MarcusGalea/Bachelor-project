@@ -51,10 +51,12 @@ for pic in os.listdir(images):
         if sum(sum(sum(mask))) != 0:
             continue
     except FileNotFoundError:
-        if avg < 0.2:
+        if avg < 0.19:
             #print(pic)
-            plt.imshow(img,cmap = 'gray')
-            plt.show()
+            #plt.imshow(img,cmap = 'gray')
+            #plt.show()
+            
+            os.remove(images + pic)
     
     #avg_vec.append(avg)
         
