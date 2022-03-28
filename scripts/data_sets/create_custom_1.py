@@ -24,8 +24,8 @@ from pytorch_metric_learning.samplers import MPerClassSampler
 import random
 
 
-#direc = r"C:\Users\aleks\OneDrive\Dokumenter\GitHub\Bachelor-project--defect-detection-on-solar-panels\data\\"
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
@@ -61,7 +61,7 @@ class ToTensor(object):
         return image
 
 #def load_data(data_dir= None):
-data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
+data = CustomImageDataset(annotations_file = direc+series+"all_labels.csv",
                           img_dir = direc+series+r"CellsCorr_resize\\")
 
 
@@ -95,7 +95,7 @@ test_labels = labels[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
 train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
-test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
+#test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #%% create dataloaders
 #device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -117,7 +117,6 @@ train_loader = DataLoader(
 test_loader = DataLoader(
     test_split,
     shuffle=False,
-    sampler = test_sampler,
     batch_size=batch_size,
     **kwargs
 )

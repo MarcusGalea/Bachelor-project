@@ -36,7 +36,7 @@ elif device == "cpu":
     net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
 
 net.eval()
-#%% Testing
+#%% Testing accuracy
 correct = 0
 total = 0
 # since we're not training, we don't need to calculate the gradients for our outputs
@@ -57,7 +57,7 @@ with torch.no_grad():
 
 print(f'Accuracy of the network on the test images: {100 * correct // total} %')
 
-#%%
+#%% Testing class accuracy
 classes = ('No Defect','Defect')
 # prepare to count predictions for each class
 correct_pred = {classname: 0 for classname in classes}
@@ -83,12 +83,29 @@ for classname, correct_count in correct_pred.items():
     accuracy = 100 * float(correct_count) / total_pred[classname]
     print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
     
-#%% save/load model 
-torch.save(net.state_dict(), dname)
+#%% Confusion matrix
+#TP FP
+#FN TN
+C = np.array([[0,0],[0,0]])
+k = 0
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data
+        if device == "cuda:0":
+            images = images.type(torch.cuda.FloatTensor)#.to(device)
+            labels = labels.type(torch.cuda.LongTensor)  
+        outputs = net(images)
+        _, predictions = torch.max(outputs, 1)
+        for label, prediction in zip(labels,predictions):
+            if label == 1 and prediction == 1:
+                C[0,0] += 1
+            if label == 0 and prediction == 1:
+                C[0,1] += 1
+            if label == 1 and prediction == 0:
+                C[1,0] += 1
+            if label == 0 and prediction == 0:
+                C[1,1] += 1
+        k += 1
+        print(k)
 
-net = Net()
-net.load_state_dict(torch.load(dname))
-net.eval()
-
-#%% plots
-plt.imshow(net.conv1.weight[5][0].cpu().detach().numpy(),cmap = "gray")
+print(C)

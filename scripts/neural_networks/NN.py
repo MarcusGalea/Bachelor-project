@@ -29,7 +29,8 @@ from torchvision.io import read_image
 
 #%%
 
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 
 series = r"AllSeries\\"
 kernel = r"Kernels\PC\\"
@@ -72,7 +73,7 @@ class Net(nn.Module):
         return x
 
 
-
+"""
 PC_link = direc+series+kernel+defect
 
 k = -1
@@ -90,12 +91,10 @@ for PC in os.listdir(PC_link):
     weights[k] = PC
     biases[k] = torch.dot(-PC.reshape(-1,1).squeeze(),avg)
     k+= 1
-
+"""
 net = Net(kernw = 50,
           l1=80,
           l2=40,
-          weights = weights, 
-          biases = biases
           )
 
 avg_im = read_image(direc + series+"_average_cell.png")[0]
