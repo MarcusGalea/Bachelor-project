@@ -124,3 +124,7 @@ test_loader = DataLoader(
     #return train_loader, test_loader
 
 #train_loader, test_loader = load_data(direc+series)
+#%%
+for i,datas in enumerate(train_loader):
+    inputs,labels = datas
+    break
