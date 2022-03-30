@@ -50,7 +50,13 @@ class Net_model_1_5(nn.Module):
         self.conv2 = nn.Conv2d(kernlayers, 2*kernlayers, kernw//2)
         self.fc1 = nn.Linear((((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
-        self.fc3 = nn.Linear(l2, 4)
+        self.fc3 = nn.Linear(l2,4)
+        """
+        self.fcA = nn.Linear(l2, 2)
+        self.fcB = nn.Linear(l2, 2)
+        self.fcC = nn.Linear(l2, 2)
+        self.fcF = nn.Linear(l2, 2)
+        """
         self.sig = nn.Sigmoid()
         #self.init_weights(weights,biases)
     
@@ -67,6 +73,13 @@ class Net_model_1_5(nn.Module):
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
+        """
+        A = self.fcA(x)
+        B = self.fcB(x)
+        C = self.fcC(x)
+        Fin = self.fcF(x)
+        return A,B,C,Fin
+        """
         x = self.fc3(x)
         return x
 
@@ -111,7 +124,7 @@ w = torch.tensor([1.,10.])
 if device == "cuda:0":
     w = w.type(torch.cuda.FloatTensor)#.to(device)
 
-criterion = nn.CrossEntropyLoss(weight=w)
+criterion = nn.CrossEntropyLoss()
 
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
 
@@ -126,6 +139,12 @@ for epoch in range(5):  # loop over the dataset multiple times
     for i, datas in enumerate(train_loader):
         # get the inputs; data is a list of [inputs, labels]
         inputs, labels = datas #range(0,250)
+        """
+        labelA = labels[:,0]
+        labelB = labels[:,1]
+        labelC = labels[:,2]
+        labelF = labels[:,3]
+        """
         inputs -= avg_im #range(-250,250)
         inputs /= 255 #range(-1,1)
         inputs += 1 #range(0,2)
@@ -140,12 +159,31 @@ for epoch in range(5):  # loop over the dataset multiple times
 
         # forward + backward + optimize
         outputs = net(inputs)
+        """
+        outA = outputs[0]
+        outB = outputs[1]
+        outC = outputs[2]
+        outF = outputs[3]
+        
+        lossA = criterion(outA,labelA)
+        lossB = criterion(outB,labelB)
+        lossC = criterion(outC,labelC)
+        lossF = criterion(outF,labelF)
+        """
+        
         loss = criterion(outputs,labels)
+    
         loss.backward()
         optimizer.step()
 
         # print statistics
         running_loss += loss.item()
+        """
+        running_lossA += lossA.item()
+        running_lossB += lossB.item()
+        running_lossC += lossC.item()
+        running_lossF += lossF.item()
+        """
 
         if i % printfreq == printfreq-1:    # print every 2000 mini-batches
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')

@@ -55,5 +55,6 @@ for label in os.listdir(labels):
         #print("cells for "+txt+" are missing")
         continue
 
-pd.DataFrame(y).to_csv(direc + series + "all_labels2.csv",header = None, index = None)
-
+pd.DataFrame(y).to_csv(direc + series + "new.csv",header = None, index = None,sep=';')
+#a = np.asarray(y)
+#np.savetxt(direc+series+'new.csv',a,delimiter=',',fmt='%s')

@@ -30,7 +30,7 @@ series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
-        self.img_labels = pd.read_csv(annotations_file)
+        self.img_labels = pd.read_csv(annotations_file,delimiter=';',header=None)
         self.img_dir = img_dir
         self.transform = transform
         self.target_transform = target_transform
@@ -42,7 +42,7 @@ class CustomImageDataset(Dataset):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
         image = read_image(img_path)
         label = self.img_labels
-        label = label.iloc[idx, 1].split('[')[1].split[']'][0].split[',']
+        label = label.iloc[idx, 1].split('[')[1].split(']')[0].split(',')
         label = np.array(label).astype(float)
         if self.transform:
             image = self.transform(image)
@@ -126,3 +126,7 @@ test_loader = DataLoader(
     #return train_loader, test_loader
 
 #train_loader, test_loader = load_data(direc+series)
+#%%
+for i,datas in enumerate(train_loader):
+    inputs,labels = datas
+    break
