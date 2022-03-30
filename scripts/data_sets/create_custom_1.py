@@ -24,8 +24,8 @@ from pytorch_metric_learning.samplers import MPerClassSampler
 import random
 
 
-direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
@@ -62,7 +62,8 @@ class ToTensor(object):
 
 #def load_data(data_dir= None):
 data = CustomImageDataset(annotations_file = direc+series+"all_labels.csv",
-                          img_dir = direc+series+r"CellsCorr_resize\\")
+                          img_dir = direc+series+r"CellsCorr_resize\\",
+                          transform = transforms.RandomVerticalFlip())
 
 
 labels = data.img_labels.to_numpy()[:,1]

@@ -31,18 +31,20 @@ import os
 from pathlib import Path
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
+os.chdir(dname)
 
+"""
 pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
+"""
 
 # %%
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-
+global datadir
+global labels
+global images
 
 user = "Marcus"
 if user == "Aleksander":
@@ -50,11 +52,16 @@ if user == "Aleksander":
     series = r"Full_data\\"
     images = r"All_images\\"
     labels = r"all_labels.csv"
+    
+    
 elif user == "Marcus":
     direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
     series = r"AllSeries\\"
     images = "CellsCorr_resize"
     labels = "labels.csv"
+
+
+datadir = direc+series
 
 
 # %%
@@ -80,7 +87,7 @@ class CustomImageDataset(Dataset):
 
 
 # %%
-def load_data(data_dir = None):
+def load_data(data_dir,labels,images):
     data = CustomImageDataset(annotations_file=data_dir+labels,
                               img_dir=data_dir+images)
 
@@ -168,9 +175,11 @@ class Net(nn.Module):
 
 
 # %%
-def train_cifar(config, checkpoint_dir=None, data_dir=None):
+def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = None):
     net = Net(kernw=50, l1=config["l1"], l2=config["l2"])
-
+    
+    avg_im = read_image(data_dir +"_average_cell.png")[0]
+    
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda:0"
@@ -187,65 +196,71 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None):
         net.load_state_dict(model_state)
         optimizer.load_state_dict(optimizer_state)
 
-    trainloader, valloader = load_data(data_dir)
+    trainloader, valloader = load_data(data_dir,labels,images)
 
+    printfreq = 20
     for epoch in range(2):  # loop over the dataset multiple times
+    
         running_loss = 0.0
-        epoch_steps = 0
-        for i, data in enumerate(trainloader, 0):
+        for i, datas in enumerate(trainloader):
             # get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            inputs /= 255
-            inputs, labels = inputs.to(device), labels.to(device)
-
+            #remove average image to remove lines
+            inputs, labels = datas #range = (0,250)
+            inputs -= avg_im #range = (-250,250)
+            inputs /= 255 #range = (-1,1)
+            inputs += 1 # range = (0,2)
+            inputs /= 2 # range = (0,1)
+            if device == "cuda:0":
+                inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
+                labels = labels.type(torch.cuda.LongTensor)
+            #labels = labels.to(device)
+    
             # zero the parameter gradients
             optimizer.zero_grad()
-
+    
             # forward + backward + optimize
             outputs = net(inputs)
-            loss = criterion(outputs, labels.type(
-                'torch.FloatTensor').reshape(-1, 1))
+            loss = criterion(outputs,labels)
             loss.backward()
             optimizer.step()
-
+    
             # print statistics
             running_loss += loss.item()
-            epoch_steps += 1
-            if i % 20 == 19:  # print every 2000 mini-batches
-                print("[%d, %5d] loss: %.3f" % (epoch + 1, i + 1,
-                                                running_loss / epoch_steps))
+    
+            if i % printfreq == printfreq-1:    # print every 2000 mini-batches
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
                 running_loss = 0.0
-
-        # Validation loss
-        val_loss = 0.0
-        val_steps = 0
-        total = 0
-        correct = 0
-        for i, data in enumerate(valloader, 0):
-            with torch.no_grad():
-                inputs, labels = data
-                inputs, labels = inputs.to(device), labels.to(device)
-
-                outputs = net(inputs)
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-
-                loss = criterion(outputs, labels)
-                val_loss += loss.cpu().numpy()
-                val_steps += 1
-
-        with tune.checkpoint_dir(epoch) as checkpoint_dir:
-            path = os.path.join(checkpoint_dir, "checkpoint")
-            torch.save((net.state_dict(), optimizer.state_dict()), path)
-
-        tune.report(loss=(val_loss / val_steps), accuracy=correct / total)
+    
+            # Validation loss
+            val_loss = 0.0
+            val_steps = 0
+            total = 0
+            correct = 0
+            for i, data in enumerate(valloader, 0):
+                with torch.no_grad():
+                    inputs, labels = data
+                    inputs, labels = inputs.to(device), labels.to(device)
+    
+                    outputs = net(inputs)
+                    _, predicted = torch.max(outputs.data, 1)
+                    total += labels.size(0)
+                    correct += (predicted == labels).sum().item()
+    
+                    loss = criterion(outputs, labels)
+                    val_loss += loss.cpu().numpy()
+                    val_steps += 1
+    
+            with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                path = os.path.join(checkpoint_dir, "checkpoint")
+                torch.save((net.state_dict(), optimizer.state_dict()), path)
+    
+            tune.report(loss=(val_loss / val_steps), accuracy=correct / total)
     print("Finished Training")
-
+    
 
 # %%
-def test_accuracy(net, device="cpu"):
-    trainset, testset = load_data()
+def test_accuracy(net, device="cpu",data_dir=None,labels=None,images=None):
+    trainset, testset = load_data(data_dir, labels, images)
 
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=4, shuffle=False, num_workers=2)
@@ -267,7 +282,7 @@ def test_accuracy(net, device="cpu"):
 
 def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
-    load_data(direc+series)
+    load_data(datadir, labels,images)
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
@@ -284,7 +299,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         # parameter_columns=["l1", "l2", "lr", "batch_size"],
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
-        partial(train_cifar,data_dir = direc+series),
+        partial(train_cifar,data_dir = direc+series,labels=labels,images=images),
         resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
         config=config,
         num_samples=num_samples,

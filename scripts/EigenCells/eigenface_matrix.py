@@ -18,7 +18,7 @@ os.chdir(dname)
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 
 series = r"AllSeries\Kernels\\"
-defect = r"Crack A\\"
+defect = r"Finger Failure\\"
 
 destination = r'PC\\'
 
@@ -72,18 +72,25 @@ for i in range(10):
 
 
 #%%
+import random
+#random.seed(10)
+
 gamma = A[:,0]
 im1 = gamma.reshape(50,50)
 plt.imshow(im1,cmap = "gray")
 
 Omega = gamma - mean
 
-N_PC = 40
+N_PC = 15
 omega = np.zeros(N_PC)
 proj = np.zeros((50,50))
 
 for i in range(1,N_PC):
     omega[i] = np.dot(Omega,Vh[i,:])
+
+random.shuffle(omega)
+
+for i in range(1,N_PC):
     proj += omega[i]*Vh[i,:].reshape(50,50)
     
 proj+=mean.reshape(50,50)

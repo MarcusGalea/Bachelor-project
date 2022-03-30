@@ -24,15 +24,19 @@ from NN import *
 printfreq = 20
 N = len(train_loader)
 
+
 table = []
-for epoch in range(5):  # loop over the dataset multiple times
+for epoch in range(10):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, datas in enumerate(train_loader):
         # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = datas
-        inputs /= 255
-        #inputs -= avg_im
+        #remove average image to remove lines
+        inputs, labels = datas #range = (0,250)
+        inputs -= avg_im #range = (-250,250)
+        inputs /= 255 #range = (-1,1)
+        inputs += 1 # range = (0,2)
+        inputs /= 2 # range = (0,1)
         if device == "cuda:0":
             inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)
@@ -56,7 +60,6 @@ for epoch in range(5):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
-
 PATH = "NN_1_2.pt"
 torch.save(net.state_dict(), PATH)
 

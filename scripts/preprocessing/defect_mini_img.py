@@ -21,27 +21,36 @@ os.chdir(parent_folder)
 
 #%%
 from preprocessing.create_csv import dic,y
-from data_sets.create_custom_1 import train_indices
+from data_sets.create_custom_1 import train_indices,test_indices
 #%%
 
+data_type = "test"
 
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 #direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 series = r'AllSeries\\'
+
+avg = mpimg.imread(direc+series+"_average_cell.png")
+
 
 img_origin = series + r"CellsCorr_resize\\"
 mask_origin = series + r'MaskGT\\'
 
 #extra folder for marcus
 series += r"Kernels\\"
-destination = direc+ series + r"All Defects\\"
+if data_type == "test":
+    series += r"test\\"
+    indices = test_indices
+else:
+    indices = train_indices
+
+destination = direc+ series + r"Crack A\\"
 destination1 = direc + series  + r"Crack A\\"
 destination2 = direc + series +r"Crack B\\"
 destination3 = direc + series +r"Crack C\\"
 destination4 = direc + series +r"Finger Failure\\"
 
 
-avg = mpimg.imread(direc+series+"_average_cell.png")
 def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_origin,destination):
     #load image and mask
     mask = loadmat(direc + mask_origin + mask_name)['GTMask']
@@ -134,7 +143,7 @@ def defect_img(img_name,mask_name,new_img_size,direc,series,mask_origin,img_orig
         plt.show(fig)
         """
         
-        mpimg.imsave(direc+destination+ label +"_defect"+ str(i) + img_name, defect_im,cmap = "gray")
+        mpimg.imsave(destination+ label +"_defect"+ str(i) + img_name, defect_im,cmap = "gray")
 
 
 k = 0
@@ -152,7 +161,7 @@ for mask in os.listdir(direc+mask_origin):
     
     if y[label_idx] == 0:
         continue
-    elif label_idx in train_indices:
+    elif label_idx in indices:
         img_name = '_resize' + txt[0][2:] + 'ImageCorr' + txt[1][:-4] + '.png'
         defect_im = defect_img(img_name,mask,50,direc,series,mask_origin,img_origin,destination)       
 

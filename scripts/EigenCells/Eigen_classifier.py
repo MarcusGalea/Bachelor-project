@@ -30,6 +30,7 @@ direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semeste
 
 
 series = r"AllSeries\Kernels\\"
+test = True
 
 destination = r'PC\\'
 
@@ -37,7 +38,7 @@ defects = [r"Crack A\\",r"Crack B\\",r"Crack C\\", r"Finger Failure\\"]
 
 
 
-N_PCs = 200
+N_PCs = 400
 PCs = np.zeros((4,N_PCs,50*50))
 
 
@@ -53,22 +54,28 @@ for i,defect in enumerate(defects):
                 break
             PCs[i,k,:] = np.array(row,dtype=np.float32)
             k+= 1
+if test:
+    series +=r"test\\"
 
-#%%
+#%% Classifier type 1
 N_samples = 100
 N_classes = 4
-distances = np.zeros((N_samples*N_classes,N_classes))
+N_PCs = 10
+distances = np.zeros((N_classes,N_samples,N_classes))
+PC1_direction = np.zeros((N_classes,N_samples,N_classes))
 
-for i,defect in enumerate(defects[:N_classes]): #loop over defect type
+for i,defect in enumerate(defects[0:N_classes]): #loop over defect type
     #print("defect " + defect)
     for j,kernel in enumerate(os.listdir(direc+series+defect)): #loop over images in defect
         if j == N_samples:
             break
         f_name = direc + series+defect+kernel
         Gamma = mpimg.imread(f_name)[:,:,0]
+        
         #plt.imshow(Gamma,cmap = "gray")
         #plt.title("Image")
-        plt.show()
+        #plt.show()
+        
         proj = np.zeros(2500)
         for k in range(N_classes): #test image for each defect type
             for l in range(N_PCs): #loop over Principal components
@@ -80,6 +87,8 @@ for i,defect in enumerate(defects[:N_classes]): #loop over defect type
                 else:
                     omega= np.dot(Omega,PC)
                     proj += omega*PC
+                    if l == 1:
+                        PC1_direction[i,j,k] = omega
                     
             #plt.imshow((proj+avg).reshape((50,50)),cmap = "gray")
             #plt.title(["classs" + str(k)])
@@ -87,12 +96,25 @@ for i,defect in enumerate(defects[:N_classes]): #loop over defect type
             
             distance = np.linalg.norm(proj-Omega)
             #print("distance to class "+str(k) + " is "+ str(distance))
-            distances[i*N_samples+j,k] = distance
+            distances[i,j,k] = distance
             
+#%% plot of results
+
+
+
+def plot_points(Crack_1 = 2, Crack_2 = 3, N_samples = 20, method = distances):
+
+    plt.plot(method[Crack_1,:,Crack_1],method[Crack_1,:,Crack_2],'*',label = defects[Crack_1])
+    plt.plot(method[Crack_2,:,Crack_1],method[Crack_2,:,Crack_2],'*',label = defects[Crack_2])
+    plt.legend()
+    
+Crack_1 = 0
+Crack_2 = 3
+plot_points(Crack_1,Crack_2,N_samples,distances)
+
+
 #%%
 
-Crack_x = 2 
-Crack_y = 1
-plt.plot(distances[Crack_x*N_samples:N_samples*(1+Crack_x),Crack_x],distances[Crack_x*N_samples:N_samples*(1+Crack_x),Crack_y],'*',label = defects[Crack_x])
-plt.plot(distances[Crack_y*N_samples:N_samples*(1+Crack_y),Crack_x],distances[Crack_y*N_samples:N_samples*(1+Crack_y),Crack_y],'*',label = defects[Crack_y])
-plt.legend()
+Crack_1 = 2
+Crack_2 = 3
+plot_points(Crack_1,Crack_2,N_samples,PC1_direction)

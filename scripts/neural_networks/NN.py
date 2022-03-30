@@ -28,9 +28,8 @@ from torchvision.io import read_image
 
 
 #%%
-
-direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 
 series = r"AllSeries\\"
 kernel = r"Kernels\PC\\"
@@ -40,8 +39,8 @@ class Net(nn.Module):
     def __init__(self,
                  kernw = 50, #width/height of convolution
                  kernlayers = 10, #number number of layers in first convolution (twice as many in second convolution)
-                 l1 = 120, #number of outputs in first linear transformation
-                 l2 = 84, #number of outputs in second linear transformation
+                 l1 = 64, #number of outputs in first linear transformation
+                 l2 = 32, #number of outputs in second linear transformation
                  weights = None,
                  biases = None,
                  imagew = 300, #width/height of input image
