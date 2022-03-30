@@ -25,7 +25,7 @@ for pic in os.listdir(images):
         txt = pic.split("ImageCorr")[1]
         txt = txt.split(".")[0]
         dic[txt] = k
-        y.append([pic,[0,0,0,0]])
+        y.append([pic,np.array([0.,0.,0.,0.]).tolist()])
         k += 1
 
 for label in os.listdir(labels):
@@ -41,18 +41,18 @@ for label in os.listdir(labels):
         for i in range(len(mat_label)):
             #print(mat_label[i][0][0])
             if sum(sum(mask[:,:,i])) == 0:
-                print(label)
+                #print(label)
                 continue
             if mat_label[i][0][0] == 'Finger Failure':
-               y[dic[txt]][1][3]  = 1
+               y[dic[txt]][1][3]  = 1.
             if mat_label[i][0][0] == 'Crack A':
-                y[dic[txt]][1][0] = 1
+                y[dic[txt]][1][0] = 1.
             if mat_label[i][0][0] == 'Crack B':
-                y[dic[txt]][1][1] = 1
+                y[dic[txt]][1][1] = 1.
             if mat_label[i][0][0] == 'Crack C':
-                y[dic[txt]][1][2] = 1 
+                y[dic[txt]][1][2] = 1.
     except KeyError:
-        print("cells for "+txt+" are missing")
+        #print("cells for "+txt+" are missing")
         continue
 
 pd.DataFrame(y).to_csv(direc + series + "all_labels2.csv",header = None, index = None)

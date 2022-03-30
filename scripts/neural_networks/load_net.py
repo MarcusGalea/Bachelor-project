@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from torchvision.io import read_image
 
 #%%
-PATH = "NN_1.pt"
+PATH = "NN_1_2.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
@@ -66,7 +66,13 @@ total_pred = {classname: 0 for classname in classes}
 # again no gradients needed
 with torch.no_grad():
     for data in test_loader:
-        images, labels = data
+        images, labels = data #range(0,250)
+        images -= avg_im #range(-250,250)
+        images /= 255 #range(-1,1)
+        images += 1 #range(0,2)
+        images /= 2 #range(0,1)
+        
+        
         if device == "cuda:0":
             images = images.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)  
@@ -90,7 +96,11 @@ C = np.array([[0,0],[0,0]])
 k = 0
 with torch.no_grad():
     for data in test_loader:
-        images, labels = data
+        images, labels = data #range(0,250)
+        images -= avg_im #range(-250,250)
+        images /= 255 #range(-1,1)
+        images += 1 #range(0,2)
+        images /= 2 #range(0,1)
         if device == "cuda:0":
             images = images.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)  
