@@ -58,8 +58,10 @@ for epoch in range(10):  # loop over the dataset multiple times
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
             table.append([epoch +1, i+1, running_loss / printfreq])
             running_loss = 0.0
-
+#%%
+"""
 print('Finished Training')
-PATH = "NN_1_2.pt"
+PATH = "NN_1_4.pt"
 torch.save(net.state_dict(), PATH)
+"""
 

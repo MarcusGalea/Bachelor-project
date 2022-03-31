@@ -118,6 +118,6 @@ criterion = nn.CrossEntropyLoss(weight=w)
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
 
 #%% show kernels
-plt.imshow(net.conv1.weight.cpu().detach().numpy()[0][0],cmap = "gray")
+#plt.imshow(net.conv1.weight.cpu().detach().numpy()[0][0],cmap = "gray")
 #plt.imshow(convolutions[8][0],cmap = "gray")
 #plt.imshow(avg_im,cmap = "gray")

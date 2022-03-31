@@ -31,14 +31,13 @@ import os
 from pathlib import Path
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
+#os.chdir(dname)
 
-"""
+
 pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
-"""
 
 # %%
 
@@ -63,8 +62,9 @@ elif user == "Marcus":
 
 datadir = direc+series
 
-
+#from data_sets.create_custom_1 import CustomImageDataset
 # %%
+
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
         self.img_labels = pd.read_csv(annotations_file)
@@ -85,63 +85,71 @@ class CustomImageDataset(Dataset):
             label = self.target_transform(label)
         return image[0:1].type(torch.FloatTensor), label
 
-
 # %%
-def load_data(data_dir,labels,images):
-    data = CustomImageDataset(annotations_file=data_dir+labels,
-                              img_dir=data_dir+images)
-
-    labels = data.img_labels.to_numpy()[:, 1]
-
-    # Big dataset. Concatenate all data to the same dataset
-
-    # initialize sizes
-    N = len(data)
-    train_size = 0.8  # proportion of training data
-    batch_size = 8  # batch size
-    m = batch_size//2  # amount of data per class in every batch
+def load_data(data_dir = None,labels=None,images=None):
+    data = CustomImageDataset(annotations_file = data_dir+labels,
+                              img_dir = data_dir + images,
+                              transform = transforms.RandomVerticalFlip())
     
     
+    labels = data.img_labels.to_numpy()[:,1]
+    
+    
+    
+    #seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
     random.seed(10)
-    # randomly shuffle indices
+    
+    #initialize sizes
+    N = len(data)
+    train_size = 0.8 #proportion of training data
+    batch_size = 8 #batch size
+    m = batch_size//2 #amount of data per class in every batch
+    
+    
+    #randomly shuffle indices
     indices = list(range(N))
     random.shuffle(indices)
-    # create indices for both training data and test data
+    #create indices for both training data and test data
     train_indices = indices[:floor(train_size*N)]
     test_indices = indices[floor(train_size*N):]
-
-    # split data into training data and test data
+    
+    
+    #split data into training data and test data
     train_split = Subset(data, train_indices)
     test_split = Subset(data, test_indices)
     train_labels = labels[train_indices]
     test_labels = labels[test_indices]
-
-    # create sampler for each set of data, s.t each batch contains m of each class
-    train_sampler = MPerClassSampler(
-        train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-    test_sampler = MPerClassSampler(
-        test_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-
-    # create dataloaders
-
-    # dataloader for training data
+    
+    #create sampler for each set of data, s.t each batch contains m of each class
+    train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
+    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
+    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
+    kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
+    
+    
+    
+    #dataloader for training data
     train_loader = DataLoader(
         train_split,
         shuffle=False,
-        num_workers=0,
-        sampler=train_sampler,
-        batch_size=batch_size
+        sampler = train_sampler,
+        batch_size=batch_size,
+        **kwargs
     )
-
-    # dataloader for test data
+    
+    #dataloader for test data
     test_loader = DataLoader(
         test_split,
         shuffle=False,
-        num_workers=0,
-        sampler=test_sampler,
-        batch_size=batch_size
+        sampler = test_sampler,
+        batch_size=batch_size,
+        **kwargs
     )
     return train_loader, test_loader
+
+#train_loader, test_loader = load_data(direc+series)
 # %%
 
 
@@ -176,7 +184,7 @@ class Net(nn.Module):
 
 # %%
 def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = None):
-    net = Net(kernw=50, l1=config["l1"], l2=config["l2"])
+    net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"])
     
     avg_im = read_image(data_dir +"_average_cell.png")[0]
     
@@ -186,8 +194,12 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
         if torch.cuda.device_count() > 1:
             net = nn.DataParallel(net)
     net.to(device)
-
-    criterion = nn.CrossEntropyLoss()
+    
+    w = torch.tensor([1.,10.])
+    if device == "cuda:0":
+        w = w.type(torch.cuda.FloatTensor)#.to(device)
+    
+    criterion = nn.CrossEntropyLoss(weight=w)
     optimizer = optim.SGD(net.parameters(), lr=config["lr"], momentum=0.9)
 
     if checkpoint_dir:
@@ -199,7 +211,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
     trainloader, valloader = load_data(data_dir,labels,images)
 
     printfreq = 20
-    for epoch in range(2):  # loop over the dataset multiple times
+    for epoch in range(10):  # loop over the dataset multiple times
     
         running_loss = 0.0
         for i, datas in enumerate(trainloader):
@@ -239,8 +251,12 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
             for i, data in enumerate(valloader, 0):
                 with torch.no_grad():
                     inputs, labels = data
+                    inputs -= avg_im #range = (-250,250)
+                    inputs /= 255 #range = (-1,1)
+                    inputs += 1 # range = (0,2)
+                    inputs /= 2 # range = (0,1)
                     inputs, labels = inputs.to(device), labels.to(device)
-    
+                    
                     outputs = net(inputs)
                     _, predicted = torch.max(outputs.data, 1)
                     total += labels.size(0)
@@ -270,6 +286,10 @@ def test_accuracy(net, device="cpu",data_dir=None,labels=None,images=None):
     with torch.no_grad():
         for data in testloader:
             images, labels = data
+            images -= avg_im #range(-250,250)
+            images /= 255 #range(-1,1)
+            images += 1 #range(0,2)
+            images /= 2 #range(0,1)
             images, labels = images.to(device), labels.to(device)
             outputs = net(images)
             _, predicted = torch.max(outputs.data, 1)
@@ -286,7 +306,9 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
-        "lr": tune.loguniform(1e-4, 1e-1)
+        "lr": tune.loguniform(1e-4, 1e-1),
+        "kernw": tune.choice([30, 40, 50, 60, 70]),
+        "kernlayers": tune.choice([4, 6, 8, 10, 12, 14])
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
@@ -300,7 +322,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
         partial(train_cifar,data_dir = direc+series,labels=labels,images=images),
-        resources_per_trial={"cpu": 2, "gpu": gpus_per_trial},
+        resources_per_trial={"cpu": 10, "gpu": gpus_per_trial},
         config=config,
         num_samples=num_samples,
         scheduler=scheduler,
@@ -312,7 +334,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    best_trained_model = Net(best_trial.config["l1"], best_trial.config["l2"])
+    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"])
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda:0"
@@ -331,4 +353,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=10, max_num_epochs=10, gpus_per_trial=0)
+    main(num_samples=10, max_num_epochs=10, gpus_per_trial=1)

@@ -49,16 +49,6 @@ class CustomImageDataset(Dataset):
         return image[0:1].type(torch.FloatTensor), label
 
 
-class ToTensor(object):
-    """Convert ndarrays in sample to Tensors."""
-
-    def __call__(self, image):
-
-        # swap color axis because
-        # numpy image: H x W x C
-        # torch image: C x H x W
-        image = image.permute((2,0,1))
-        return image
 
 #def load_data(data_dir= None):
 data = CustomImageDataset(annotations_file = direc+series+"all_labels.csv",
@@ -96,7 +86,7 @@ test_labels = labels[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
 train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
-#test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
+test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #%% create dataloaders
 #device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -118,13 +108,10 @@ train_loader = DataLoader(
 test_loader = DataLoader(
     test_split,
     shuffle=False,
+    sampler = test_sampler,
     batch_size=batch_size,
     **kwargs
 )
     #return train_loader, test_loader
 
 #train_loader, test_loader = load_data(direc+series)
-#%%
-for i,datas in enumerate(train_loader):
-    inputs,labels = datas
-    break
