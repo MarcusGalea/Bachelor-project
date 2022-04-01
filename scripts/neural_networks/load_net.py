@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from torchvision.io import read_image
 
 #%%
-PATH = "NN_1_3.pt"
+PATH = "NN_1_5.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
@@ -43,6 +43,10 @@ total = 0
 with torch.no_grad():
     for i, data in enumerate(test_loader, 0):
         images, labels = data
+        images -= avg_im #range(-250,250)
+        images /= 255 #range(-1,1)
+        images += 1 #range(0,2)
+        images /= 2 #range(0,1)
         if device == "cuda:0":
             images = images.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)
@@ -84,10 +88,10 @@ with torch.no_grad():
                 correct_pred[classes[label]] += 1
             total_pred[classes[label]] += 1
 
-# print accuracy for each class
-for classname, correct_count in correct_pred.items():
-    accuracy = 100 * float(correct_count) / total_pred[classname]
-    print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+        # print accuracy for each class
+        for classname, correct_count in correct_pred.items():
+            accuracy = 100 * float(correct_count) / total_pred[classname]
+            print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
     
 #%% Confusion matrix
 #TP FP

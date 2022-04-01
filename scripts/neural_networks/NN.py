@@ -53,6 +53,7 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
         self.sig = nn.Sigmoid()
+        self.drop = nn.Dropout(p=0.5)
         #self.init_weights(weights,biases)
     
     def init_weights(self,weights,biases):
@@ -66,8 +67,8 @@ class Net(nn.Module):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = torch.flatten(x, 1) # flatten all dimensions except batch
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        x = F.relu(self.drop(self.fc1(x)))
+        x = F.relu(self.drop(self.fc2(x)))
         x = self.fc3(x)
         return x
 
@@ -91,9 +92,9 @@ for PC in os.listdir(PC_link):
     biases[k] = torch.dot(-PC.reshape(-1,1).squeeze(),avg)
     k+= 1
 """
-net = Net(kernw = 50,
-          l1=80,
-          l2=40,
+net = Net(kernw = 70,
+          l1=100,
+          l2=50,
           )
 
 avg_im = read_image(direc + series+"_average_cell.png")[0]

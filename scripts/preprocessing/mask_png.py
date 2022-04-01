@@ -21,14 +21,14 @@ parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
 #%%
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
-direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 series = r'AllSeries\\'
 
 img_origin = series + r"CellsCorr_resize\\"
 mask_origin = series + r'MaskGT\\'
 
-destination = direc + series + 'mask_png\\'
+destination = direc + series + 'CellsCorr_cracked\\'
 
 for mat in os.listdir(direc + mask_origin):
 
@@ -61,6 +61,5 @@ for mat in os.listdir(direc + mask_origin):
     
     im = Image.fromarray(temp)
     #im.save(destination + label + img_name,cmap='gray')
-        
         
     break

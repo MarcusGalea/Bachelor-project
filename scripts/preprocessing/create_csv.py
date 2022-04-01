@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from scipy.io import loadmat
-
+import shutil
 
 
 abspath = os.path.abspath(__file__)
@@ -27,6 +27,7 @@ k = 0
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
 images = direc + series + r"CellsCorr_resize\\"
+faulty_images = direc + series + r"CellsCorr_faulty\\"
 labels = direc + series + r"MaskGT\\"
 
 y = []
@@ -63,6 +64,8 @@ for label in os.listdir(labels):
     txt = txt.split(".")[0]
     try:
         y[dic[serie+txt]][1] = 1
+        im_title = "_resize_Serie_" +serie+ "_ImageCorr"+txt+".png"
+        shutil.copyfile(images+im_title, faulty_images+im_title)
     except KeyError:
         print("cells for "+txt+" are missing")
         continue

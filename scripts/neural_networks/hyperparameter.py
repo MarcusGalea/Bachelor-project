@@ -44,6 +44,7 @@ os.chdir(parent_folder)
 global datadir
 global labels
 global images
+global avg_im
 
 user = "Marcus"
 if user == "Aleksander":
@@ -61,10 +62,11 @@ elif user == "Marcus":
 
 
 datadir = direc+series
+avg_im = read_image(datadir +"_average_cell.png")[0]
 
 #from data_sets.create_custom_1 import CustomImageDataset
 # %%
-
+ 
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
         self.img_labels = pd.read_csv(annotations_file)
@@ -122,7 +124,7 @@ def load_data(data_dir = None,labels=None,images=None):
     
     #create sampler for each set of data, s.t each batch contains m of each class
     train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
+    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=10000)
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device = "cpu"
@@ -186,7 +188,6 @@ class Net(nn.Module):
 def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = None):
     net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"])
     
-    avg_im = read_image(data_dir +"_average_cell.png")[0]
     
     device = "cpu"
     if torch.cuda.is_available():
@@ -321,7 +322,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         # parameter_columns=["l1", "l2", "lr", "batch_size"],
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
-        partial(train_cifar,data_dir = direc+series,labels=labels,images=images),
+        partial(train_cifar,checkpoint_dir = dname,data_dir = direc+series,labels=labels,images=images),
         resources_per_trial={"cpu": 10, "gpu": gpus_per_trial},
         config=config,
         num_samples=num_samples,
