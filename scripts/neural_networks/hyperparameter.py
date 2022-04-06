@@ -46,11 +46,11 @@ global labels
 global images
 global avg_im
 
-user = "Marcus"
+user = "HPC"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-    series = r"Full_data\\"
-    images = r"All_images\\"
+    series = r"AllSeries\\"
+    images = r"CelssCorr_resize\\"
     labels = r"all_labels.csv"
     
     
@@ -59,6 +59,12 @@ elif user == "Marcus":
     series = r"AllSeries\\"
     images = "CellsCorr_resize"
     labels = "labels.csv"
+    
+elif user == "HPC":
+    direc = r'zhome\35\5\147366\Desktop\\'
+    series = ''
+    images = 'CellsCorr_resize'
+    labels = 'labels.csv'
 
 
 datadir = direc+series
@@ -88,7 +94,7 @@ class CustomImageDataset(Dataset):
         return image[0:1].type(torch.FloatTensor), label
 
 # %%
-def load_data(data_dir = None,labels=None,images=None):
+def load_data(data_dir = None,labels=None,images=None, sample_test = False):
     data = CustomImageDataset(annotations_file = data_dir+labels,
                               img_dir = data_dir + images,
                               transform = transforms.RandomVerticalFlip())
@@ -99,7 +105,7 @@ def load_data(data_dir = None,labels=None,images=None):
     
     
     #seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
-    random.seed(10)
+    #random.seed(10)
     
     #initialize sizes
     N = len(data)
@@ -124,7 +130,11 @@ def load_data(data_dir = None,labels=None,images=None):
     
     #create sampler for each set of data, s.t each batch contains m of each class
     train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=10000)
+    if sample_test:
+        test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
+    else:
+        test_sampler = None
+    
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device = "cpu"
@@ -140,6 +150,7 @@ def load_data(data_dir = None,labels=None,images=None):
         batch_size=batch_size,
         **kwargs
     )
+    
     
     #dataloader for test data
     test_loader = DataLoader(
@@ -162,7 +173,7 @@ class Net(nn.Module):
                  kernlayers=6,
                  l1=120,  # number of outputs in first linear transformation
                  l2=84,  # number of outputs in second linear transformation
-                 imagew=300  # width/height of input image
+                 imagew=400  # width/height of input image
                  ):
         super().__init__()
         # third arg: remove n-1 from img dim
@@ -196,7 +207,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
             net = nn.DataParallel(net)
     net.to(device)
     
-    w = torch.tensor([1.,10.])
+    w = config["weight"]
     if device == "cuda:0":
         w = w.type(torch.cuda.FloatTensor)#.to(device)
     
@@ -209,7 +220,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
         net.load_state_dict(model_state)
         optimizer.load_state_dict(optimizer_state)
 
-    trainloader, valloader = load_data(data_dir,labels,images)
+    trainloader, valloader = load_data(data_dir,labels,images,sample_test = True)
 
     printfreq = 20
     for epoch in range(10):  # loop over the dataset multiple times
@@ -277,10 +288,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
 
 # %%
 def test_accuracy(net, device="cpu",data_dir=None,labels=None,images=None):
-    trainset, testset = load_data(data_dir, labels, images)
-
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=4, shuffle=False, num_workers=2)
+    trainloader, testloader = load_data(data_dir, labels, images)
 
     correct = 0
     total = 0
@@ -308,8 +316,9 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "lr": tune.loguniform(1e-4, 1e-1),
-        "kernw": tune.choice([30, 40, 50, 60, 70]),
-        "kernlayers": tune.choice([4, 6, 8, 10, 12, 14])
+        "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
+        "kernlayers": tune.choice([4, 6, 8, 10, 12, 14]),
+        "weight": tune.choice(torch.tensor([1,10]),torch.tensor([1,20]),torch.tensor([1,30]),torch.tensor([1,40]))
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
@@ -342,6 +351,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(best_trained_model)
     best_trained_model.to(device)
+    torch.save(best_trained_model,"NN_1_6.pt")
 
     best_checkpoint_dir = best_trial.checkpoint.value
     model_state, optimizer_state = torch.load(os.path.join(
@@ -354,4 +364,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=10, max_num_epochs=10, gpus_per_trial=1)
+    main(num_samples=10, max_num_epochs=10, gpus_per_trial=4)
