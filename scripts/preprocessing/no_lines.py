@@ -14,7 +14,6 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 
-
 #direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 
@@ -30,7 +29,7 @@ sys.path.insert(1, direc+'scripts')
 from functions import *
 import cv2 as cv
 import matplotlib.pyplot as plt
-
+#%%
 k = 0
 N = len(os.listdir(direc+origin))
 n = 400
@@ -53,9 +52,13 @@ for pic in imlist[k:]:
             mpimg.imsave(direc+destination+"_resize_"+pic, img,cmap = "gray")
 
 
-        
-        
-#mpimg.imsave(direc+series+"_average_cell.png", avg_im,cmap = "gray")
+
+#%%
+n =400
+m = n
+img = mpimg.imread(direc+series+"_average_cell.png")
+img = resize(img, (n, m))
+mpimg.imsave(direc+series+"_average_cell.png", img,cmap = "gray")
 
         
         

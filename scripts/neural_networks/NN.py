@@ -28,8 +28,8 @@ from torchvision.io import read_image
 
 
 #%%
-direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 
 series = r"AllSeries\\"
 kernel = r"Kernels\PC\\"
@@ -43,7 +43,7 @@ class Net(nn.Module):
                  l2 = 32, #number of outputs in second linear transformation
                  weights = None,
                  biases = None,
-                 imagew = 300, #width/height of input image
+                 imagew = 400, #width/height of input image
                  ):
         super().__init__()
         self.conv1 = nn.Conv2d(1, kernlayers, kernw) #third arg: remove n-1 from img dim
