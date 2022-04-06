@@ -4,13 +4,13 @@
 #BSUB -q gpuv100
 #BSUB -gpu "num=1:mode=exclusive_process" 
 ### -- set the job Name -- 
-#BSUB -J example_job
+#BSUB -J NN_1_6
 ### -- ask for number of cores (default: 1) -- 
-#BSUB -n 1
+#BSUB -n 4
 ### -- specify that we need 2GB of memory per core/slot -- 
-#BSUB -R "rusage[mem=2GB]"
+#BSUB -R "rusage[mem=5GB]"
 ### -- set walltime limit: hh:mm -- 
-#BSUB -W 00:05
+#BSUB -W 24:00
 ### -- set the email address -- 
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
@@ -25,4 +25,4 @@
 # here follow the commands you want to execute
 module load cuda/11.6
 source ~/bachelor/bin/activate
-python3 Desktop/Bachelor-project/Bachelor-project/scripts/hpc/example_gpu.py
+python3 example_gpu.py
