@@ -23,9 +23,16 @@ import torchvision
 from pytorch_metric_learning.samplers import MPerClassSampler
 import random
 
+user = "HPC"
 
-#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+if user = "HPC":
+    direc = r'zhome\35\5\147366\Desktop\\'
+    series = ''
+    images = 'CellsCorr_resize'
+    labels = 'labels.csv'
+
+direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
@@ -51,8 +58,8 @@ class CustomImageDataset(Dataset):
 
 
 #def load_data(data_dir= None):
-data = CustomImageDataset(annotations_file = direc+series+"labels.csv",
-                          img_dir = direc+series+r"CellsCorr_resize\\",
+data = CustomImageDataset(annotations_file = direc+series+labels,
+                          img_dir = direc+series+images,
                           transform = transforms.RandomVerticalFlip())
 
 
@@ -61,7 +68,7 @@ labels = data.img_labels.to_numpy()[:,1]
 
 
 #seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
-random.seed(10)
+#random.seed(10)
 
 #initialize sizes
 N = len(data)
@@ -89,8 +96,8 @@ train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_
 test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #%% create dataloaders
-#device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = "cpu"
 kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
 
 
