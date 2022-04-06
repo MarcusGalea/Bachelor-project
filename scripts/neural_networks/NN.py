@@ -43,7 +43,7 @@ class Net(nn.Module):
                  l2 = 32, #number of outputs in second linear transformation
                  weights = None,
                  biases = None,
-                 imagew = 300, #width/height of input image
+                 imagew = 400, #width/height of input image
                  ):
         super().__init__()
         self.conv1 = nn.Conv2d(1, kernlayers, kernw) #third arg: remove n-1 from img dim

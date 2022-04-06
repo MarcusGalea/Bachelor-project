@@ -60,6 +60,7 @@ for epoch in range(10):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_5.pt"
+PATH = "NN_1_6.pt"
 torch.save(net.state_dict(), PATH)
+pd.DataFrame(table).to_csv(r'zhome\35\5\147366\Desktop\loss_1_6.csv",header = None, index = None)
 

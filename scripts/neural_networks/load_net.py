@@ -35,7 +35,7 @@ if device == "cuda:0":
 elif device == "cpu":
     net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
 
-net.eval()
+#net.eval()
 #%% Testing accuracy
 correct = 0
 total = 0
