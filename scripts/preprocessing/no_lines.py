@@ -2,7 +2,7 @@
 """
 Created on Mon Feb 28 15:04:52 2022
 
-Removes vertical lines from data
+This scripts now reshapes images and saves them if avg pixel is above certain threshold
 
 @author: Marcu
 """
@@ -10,44 +10,55 @@ import os
 import numpy as np
 import matplotlib.image as mpimg
 from skimage.transform import resize
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 
-
-direc = r"C:\Users\aleks\OneDrive\Dokumenter\GitHub\Bachelor-project--defect-detection-on-solar-panels\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Bachelor-project--defect-detection-on-solar-panels\data\\"
-
-series = r"Series4\\"
+series = r"AllSeries\\"
 origin = series + r"CellsCorr\\"
 
-destination = series + r"CellsCorr_noline\\"
+destination = series + r"CellsCorr_resize\\"
+
 
 
 import sys
 sys.path.insert(1, direc+'scripts')
-from preprocessing.functions import *
+from functions import *
+import cv2 as cv
 import matplotlib.pyplot as plt
-
+#%%
 k = 0
-for pic in os.listdir(direc+origin):
-    print(k)
+N = len(os.listdir(direc+origin))
+n = 400
+m = n
+avg_im = np.zeros((n,m))
+
+imlist = os.listdir(direc+origin)
+for pic in imlist[k:]:
+    
     k +=1
+    print(k)
     if pic != "Thumbs.db":
         img = mpimg.imread(direc+origin+pic)
-        n,m = np.shape(img)
-        binimg = np.zeros((n,m))
-        threshold = np.quantile(img,q=0.30)
+        img = resize(img, (n, m))
+        avg_im += img/N
         
-        background = np.where(img<threshold)
-        black = np.where(img>=threshold)
-        binimg[background] = 0
-        binimg[black] = 1
+        avg = np.mean(img)
         
-        tol = 0.3
-        lines = find_lines(binimg,tol)
-        img = remove_lines(img,lines)
-        
-        img = resize(img, (250, 250))
-        
-        mpimg.imsave(direc+destination+"_noline_"+pic, img,cmap = "gray")
+        if avg > 0.28:
+            mpimg.imsave(direc+destination+"_resize_"+pic, img,cmap = "gray")
+
+
+
+#%%
+n =400
+m = n
+img = mpimg.imread(direc+series+"_average_cell.png")
+img = resize(img, (n, m))
+mpimg.imsave(direc+series+"_average_cell.png", img,cmap = "gray")
+
         
         
