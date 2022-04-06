@@ -46,7 +46,7 @@ global labels
 global images
 global avg_im
 
-user = "HPC"
+user = "Marcus"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
     series = r"AllSeries\\"
@@ -207,11 +207,11 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
             net = nn.DataParallel(net)
     net.to(device)
     
-    w = config["weight"]
+    w = torch.tensor(config["weight"])
     if device == "cuda:0":
         w = w.type(torch.cuda.FloatTensor)#.to(device)
     
-    criterion = nn.CrossEntropyLoss(weight=w)
+    criterion = nn.CrossEntropyLoss(weight = w)
     optimizer = optim.SGD(net.parameters(), lr=config["lr"], momentum=0.9)
 
     if checkpoint_dir:
@@ -318,7 +318,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         "lr": tune.loguniform(1e-4, 1e-1),
         "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
         "kernlayers": tune.choice([4, 6, 8, 10, 12, 14]),
-        "weight": tune.choice(torch.tensor([1,10]),torch.tensor([1,20]),torch.tensor([1,30]),torch.tensor([1,40]))
+        "weight": tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]])
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
@@ -328,11 +328,11 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         grace_period=1,
         reduction_factor=2)
     reporter = CLIReporter(
-        # parameter_columns=["l1", "l2", "lr", "batch_size"],
+        parameter_columns=["l1", "l2", "lr", "batch_size"],
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
         partial(train_cifar,checkpoint_dir = dname,data_dir = direc+series,labels=labels,images=images),
-        resources_per_trial={"cpu": 10, "gpu": gpus_per_trial},
+        resources_per_trial={"cpu": 8, "gpu": gpus_per_trial},
         config=config,
         num_samples=num_samples,
         scheduler=scheduler,
