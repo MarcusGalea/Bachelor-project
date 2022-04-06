@@ -46,7 +46,7 @@ global labels
 global images
 global avg_im
 
-user = "Marcus"
+user = "HPC"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
     series = r"AllSeries\\"
