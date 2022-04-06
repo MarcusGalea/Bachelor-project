@@ -25,4 +25,4 @@
 # here follow the commands you want to execute
 module load cuda/11.6
 source ~/bachelor/bin/activate
-python3 example_gpu.py
+python3 /zhome/35/5/147366/Desktop/Bachelor-project/Bachelor-project/scripts/neural_networks/training_testing.py
