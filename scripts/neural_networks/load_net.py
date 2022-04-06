@@ -15,7 +15,7 @@ parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
 #get dataloader
-from data_sets.create_custom_1 import train_loader,test_loader
+from data_sets.create_custom_1 import data, test_loader, train_loader
 from neural_networks.NN import *
 import torch
 from torch import nn
@@ -89,9 +89,9 @@ with torch.no_grad():
             total_pred[classes[label]] += 1
 
         # print accuracy for each class
-        for classname, correct_count in correct_pred.items():
-            accuracy = 100 * float(correct_count) / total_pred[classname]
-            print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+    for classname, correct_count in correct_pred.items():
+        accuracy = 100 * float(correct_count) / total_pred[classname]
+        print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
     
 #%% Confusion matrix
 #TP FP

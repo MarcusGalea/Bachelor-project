@@ -24,8 +24,8 @@ from pytorch_metric_learning.samplers import MPerClassSampler
 import random
 
 
-#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
@@ -108,7 +108,7 @@ train_loader = DataLoader(
 test_loader = DataLoader(
     test_split,
     shuffle=False,
-    sampler = test_sampler,
+    #sampler = test_sampler,
     batch_size=batch_size,
     **kwargs
 )
