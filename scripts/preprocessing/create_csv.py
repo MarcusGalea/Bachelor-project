@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import matplotlib.image as mpimg
 from scipy.io import loadmat
 import shutil
 
@@ -33,9 +34,11 @@ labels = direc + series + r"MaskGT\\"
 y = []
 dic = {}
 k = 0
+avg = []
 
 n = 10
 m = 6
+min_avg = 1000
 for pic in os.listdir(images):
     if pic != "Thumbs.db":
         serie = pic.split("_")[3]
@@ -46,7 +49,8 @@ for pic in os.listdir(images):
         k += 1
 
 for label in os.listdir(labels):
-    mask = loadmat(labels + label)['GTMask']
+    GT = loadmat(labels + label)
+    mask = GT['GTMask']
     
     try:
         N = mask.shape[2]
@@ -55,8 +59,9 @@ for label in os.listdir(labels):
         
     mask = np.reshape(mask,(mask.shape[0],mask.shape[1],N))
     
-    if sum(sum(sum(mask))) == 0:
+    if not(mask==1).any():
         print(label, 'discarded')
+        os.remove(labels+label)
         continue
     
     serie = label.split("_")[2]
@@ -66,8 +71,12 @@ for label in os.listdir(labels):
         y[dic[serie+txt]][1] = 1
         im_title = "_resize_Serie_" +serie+ "_ImageCorr"+txt+".png"
         shutil.copyfile(images+im_title, faulty_images+im_title)
+        im = mpimg.imread(images+im_title)[0]
+        avg.append(np.mean(im))
+        
     except KeyError:
         print("cells for "+txt+" are missing")
+        os.remove(labels+label)
         continue
 
 pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)

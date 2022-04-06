@@ -2,7 +2,7 @@
 """
 Created on Mon Feb 28 15:04:52 2022
 
-Removes vertical lines from data
+This scripts now reshapes images and saves them if avg pixel is above certain threshold
 
 @author: Marcu
 """
@@ -18,10 +18,11 @@ os.chdir(dname)
 #direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 
-series = r"Series1\\"
+series = r"AllSeries\\"
 origin = series + r"CellsCorr\\"
 
 destination = series + r"CellsCorr_resize\\"
+
 
 
 import sys
@@ -32,36 +33,29 @@ import matplotlib.pyplot as plt
 
 k = 0
 N = len(os.listdir(direc+origin))
-n = 300
+n = 400
 m = n
-avg = np.zeros((n,m))
-for pic in os.listdir(direc+origin):
-    print(k/N*100)
+avg_im = np.zeros((n,m))
+
+imlist = os.listdir(direc+origin)
+for pic in imlist[k:]:
+    
     k +=1
+    print(k)
     if pic != "Thumbs.db":
-        img = cv.imread(direc+origin+pic)[:,:,0]
+        img = mpimg.imread(direc+origin+pic)
         img = resize(img, (n, m))
-        avg += img/N
+        avg_im += img/N
         
-        """
-        plt.imshow(img, cmap = "gray")
+        avg = np.mean(img)
         
-        n,m = np.shape(img)
-        binimg = np.zeros((n,m))
-        threshold = np.quantile(img,q=0.30)
+        if avg > 0.28:
+            mpimg.imsave(direc+destination+"_resize_"+pic, img,cmap = "gray")
+
+
         
-        background = np.where(img<threshold)
-        black = np.where(img>=threshold)
-        binimg[background] = 0
-        binimg[black] = 1
         
-        tol = 0.3
-        lines = find_lines(binimg,tol)
-        img = remove_lines(img,lines)
-        """
-        
-        mpimg.imsave(direc+series+"_resize_"+pic, img,cmap = "gray")
-mpimg.imsave(direc+series+"_average_cell.png", avg,cmap = "gray")
+#mpimg.imsave(direc+series+"_average_cell.png", avg_im,cmap = "gray")
 
         
         
