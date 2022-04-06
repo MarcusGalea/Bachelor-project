@@ -25,7 +25,7 @@ import random
 
 user = "HPC"
 
-if user = "HPC":
+if user == "HPC":
     direc = r'zhome\35\5\147366\Desktop\\'
     series = ''
     images = 'CellsCorr_resize'
