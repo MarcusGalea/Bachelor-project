@@ -61,7 +61,7 @@ elif user == "Marcus":
     labels = "labels.csv"
     
 elif user == "HPC":
-    direc = r'zhome\35\5\147366\Desktop\\'
+    direc = '/zhome/35/5/147366/Desktop/'
     series = ''
     images = 'CellsCorr_resize'
     labels = 'labels.csv'
@@ -364,4 +364,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=10, max_num_epochs=10, gpus_per_trial=4)
+    main(num_samples=1, max_num_epochs=10, gpus_per_trial=1)
