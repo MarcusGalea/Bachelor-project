@@ -128,7 +128,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw, kernlayers, l1, l2, imagew, drop_p)
+net = Net(kernw=40, kernlayers=4, l1=4, l2=256, imagew=400, drop_p=0.25)
 
 device = "cpu"
 
