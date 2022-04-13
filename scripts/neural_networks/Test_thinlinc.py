@@ -151,7 +151,7 @@ criterion = nn.CrossEntropyLoss(weight=w)
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0036738332141314682)
     
 #%%
-data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
+data = CustomImageDataset(annotations_file = datadir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
 
 
 labels = data.img_labels.to_numpy()[:,1]
