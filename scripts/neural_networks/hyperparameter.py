@@ -288,7 +288,7 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
     
 
 # %%
-def test_accuracy(net, device="cpu",data_dir = None,labels = None,images = None):
+def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = images):
     trainloader, testloader = load_data(data_dir, labels, images)
 
     correct = 0
