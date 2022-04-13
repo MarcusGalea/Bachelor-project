@@ -95,9 +95,7 @@ class CustomImageDataset(Dataset):
 
 # %%
 def load_data(data_dir = None,labels=None,images=None, sample_test = False):
-    data = CustomImageDataset(annotations_file = data_dir+labels,
-                              img_dir = data_dir + images,
-                              transform = transforms.RandomVerticalFlip())
+    data = CustomImageDataset(annotations_file = data_dir+labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
     
     
     labels = data.img_labels.to_numpy()[:,1]
@@ -173,7 +171,8 @@ class Net(nn.Module):
                  kernlayers=6,
                  l1=120,  # number of outputs in first linear transformation
                  l2=84,  # number of outputs in second linear transformation
-                 imagew=400  # width/height of input image
+                 imagew=400,  # width/height of input image
+                 drop_p = 0.5 # dropout rate
                  ):
         super().__init__()
         # third arg: remove n-1 from img dim
@@ -184,6 +183,8 @@ class Net(nn.Module):
             (((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
+        self.drop = nn.Dropout(drop_p)
+
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -197,7 +198,7 @@ class Net(nn.Module):
 
 # %%
 def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = None):
-    net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"])
+    net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"],drop_p = config["dropout"])
     
     
     device = "cpu"
@@ -318,7 +319,8 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         "lr": tune.loguniform(1e-4, 1e-1),
         "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
         "kernlayers": tune.choice([4, 6, 8, 10, 12, 14]),
-        "weight": tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]])
+        "weight": tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
+        "dropout": tune.choice([0.25,0.5,0.75])
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
@@ -328,7 +330,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         grace_period=1,
         reduction_factor=2)
     reporter = CLIReporter(
-        parameter_columns=["l1", "l2", "lr", "kernw","kernlayers","weight"],
+        parameter_columns=["l1", "l2", "lr", "kernw","kernlayers","weight","dropout"],
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
         partial(train_cifar,checkpoint_dir = dname,data_dir = direc+series,labels=labels,images=images),
