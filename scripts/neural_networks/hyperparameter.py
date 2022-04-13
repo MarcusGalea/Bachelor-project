@@ -94,7 +94,7 @@ class CustomImageDataset(Dataset):
         return image[0:1].type(torch.FloatTensor), label
 
 # %%
-def load_data(data_dir = None,labels=None,images=None, sample_test = False):
+def load_data(data_dir,labels,images, sample_test = False):
     data = CustomImageDataset(annotations_file = data_dir+labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
     
     
@@ -197,7 +197,7 @@ class Net(nn.Module):
 
 
 # %%
-def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = None):
+def train_cifar(config, checkpoint_dir, data_dir,labels,images):
     net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"],drop_p = config["dropout"])
     
     
@@ -288,7 +288,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
     
 
 # %%
-def test_accuracy(net, device="cpu",data_dir=None,labels=None,images=None):
+def test_accuracy(net, device="cpu",data_dir,labels,images):
     trainloader, testloader = load_data(data_dir, labels, images)
 
     correct = 0
