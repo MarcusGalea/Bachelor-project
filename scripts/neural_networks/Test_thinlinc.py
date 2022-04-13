@@ -41,8 +41,8 @@ os.chdir(parent_folder)
 
 # %%
 device = "cpu"
-if torch.cuda.is_available():
-    device = "cuda:0"
+#if torch.cuda.is_available():
+    #device = "cuda:0"
 
 global datadir
 global labels
@@ -132,22 +132,23 @@ net = Net(kernw=90, kernlayers=6, l1=128, l2=4, imagew=400, drop_p=0.25)
 
 device = "cpu"
 
+"""
 if torch.cuda.is_available():
     device = "cuda:0"
     if torch.cuda.device_count() > 1:
         print(device)
         net = nn.DataParallel(net)
-
+"""
 net.to(device)
 
 
-w = torch.tensor([1.,10.])
+w = torch.tensor([1.,40.])
 if device == "cuda:0":
     w = w.type(torch.cuda.FloatTensor)#.to(device)
 
 criterion = nn.CrossEntropyLoss(weight=w)
 
-optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
+optimizer = torch.optim.Adam(net.parameters(),lr =0.0036738332141314682)
     
 #%%
 def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
@@ -190,7 +191,7 @@ def load_data(data_dir = datadir,labels = labels,images = images, sample_test = 
         test_sampler = None
     
     
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    #device = "cuda" if torch.cuda.is_available() else "cpu"
     device = "cpu"
     kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
     
