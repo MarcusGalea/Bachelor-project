@@ -353,7 +353,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(best_trained_model)
     best_trained_model.to(device)
-    torch.save(best_trained_model,"NN_1_6.pt")
+    torch.save(best_trained_model.state_dict(),"NN_1_7.pt")
 
     best_checkpoint_dir = best_trial.checkpoint.value
     model_state, optimizer_state = torch.load(os.path.join(
