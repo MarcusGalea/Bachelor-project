@@ -41,8 +41,8 @@ os.chdir(parent_folder)
 
 # %%
 device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda:0"
+if torch.cuda.is_available():
+    device = "cuda:0"
 
 global datadir
 global labels
