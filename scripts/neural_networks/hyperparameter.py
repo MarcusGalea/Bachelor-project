@@ -197,7 +197,7 @@ class Net(nn.Module):
 
 
 # %%
-def train_cifar(config, checkpoint_dir, data_dir,labels,images):
+def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,images = None):
     net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"],drop_p = config["dropout"])
     
     
@@ -288,7 +288,7 @@ def train_cifar(config, checkpoint_dir, data_dir,labels,images):
     
 
 # %%
-def test_accuracy(net, device="cpu",data_dir,labels,images):
+def test_accuracy(net, device="cpu",data_dir = None,labels = None,images = None):
     trainloader, testloader = load_data(data_dir, labels, images)
 
     correct = 0
