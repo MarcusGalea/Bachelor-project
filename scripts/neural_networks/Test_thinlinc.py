@@ -217,7 +217,7 @@ def load_data(data_dir = datadir,labels = labels,images = images, sample_test = 
     return train_loader, test_loader
     
 #%%
-PATH = "NN_1_6.pt"
+PATH = "NN_1_7.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
