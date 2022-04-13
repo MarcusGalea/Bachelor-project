@@ -94,7 +94,7 @@ class CustomImageDataset(Dataset):
         return image[0:1].type(torch.FloatTensor), label
 
 # %%
-def load_data(data_dir = None,labels = None,images = None, sample_test = False):
+def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
     data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
     
     
