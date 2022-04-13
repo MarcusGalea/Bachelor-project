@@ -151,71 +151,69 @@ criterion = nn.CrossEntropyLoss(weight=w)
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0036738332141314682)
     
 #%%
-def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
-    data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
-    
-    
-    labels = data.img_labels.to_numpy()[:,1]
-    
-    
-    
-    #seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
-    #random.seed(10)
-    
-    #initialize sizes
-    N = len(data)
-    train_size = 0.8 #proportion of training data
-    batch_size = 8 #batch size
-    m = batch_size//2 #amount of data per class in every batch
-    
-    
-    #randomly shuffle indices
-    indices = list(range(N))
-    random.shuffle(indices)
-    #create indices for both training data and test data
-    train_indices = indices[:floor(train_size*N)]
-    test_indices = indices[floor(train_size*N):]
-    
-    
-    #split data into training data and test data
-    train_split = Subset(data, train_indices)
-    test_split = Subset(data, test_indices)
-    train_labels = labels[train_indices]
-    test_labels = labels[test_indices]
-    
-    #create sampler for each set of data, s.t each batch contains m of each class
-    train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-    if sample_test:
-        test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
-    else:
-        test_sampler = None
-    
-    
-    #device = "cuda" if torch.cuda.is_available() else "cpu"
-    device = "cpu"
-    kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
-    
-    
-    
-    #dataloader for training data
-    train_loader = DataLoader(
-        train_split,
-        shuffle=False,
-        sampler = train_sampler,
-        batch_size=batch_size,
-        **kwargs
-    )
-    
-    
-    #dataloader for test data
-    test_loader = DataLoader(
-        test_split,
-        shuffle=False,
-        sampler = test_sampler,
-        batch_size=batch_size,
-        **kwargs
-    )
-    return train_loader, test_loader
+data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
+
+
+labels = data.img_labels.to_numpy()[:,1]
+
+
+
+#seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
+#random.seed(10)
+
+#initialize sizes
+N = len(data)
+train_size = 0.8 #proportion of training data
+batch_size = 8 #batch size
+m = batch_size//2 #amount of data per class in every batch
+
+
+#randomly shuffle indices
+indices = list(range(N))
+random.shuffle(indices)
+#create indices for both training data and test data
+train_indices = indices[:floor(train_size*N)]
+test_indices = indices[floor(train_size*N):]
+
+
+#split data into training data and test data
+train_split = Subset(data, train_indices)
+test_split = Subset(data, test_indices)
+train_labels = labels[train_indices]
+test_labels = labels[test_indices]
+
+#create sampler for each set of data, s.t each batch contains m of each class
+train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
+if sample_test:
+    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
+else:
+    test_sampler = None
+
+
+#device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
+kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
+
+
+
+#dataloader for training data
+train_loader = DataLoader(
+    train_split,
+    shuffle=False,
+    sampler = train_sampler,
+    batch_size=batch_size,
+    **kwargs
+)
+
+
+#dataloader for test data
+test_loader = DataLoader(
+    test_split,
+    shuffle=False,
+    sampler = test_sampler,
+    batch_size=batch_size,
+    **kwargs
+)
     
 #%%
 PATH = "NN_1_7.pt"
@@ -225,7 +223,6 @@ if device == "cuda:0":
 elif device == "cpu":
     net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
     
-train_loader, test_loader = load_data(datadir, labels,images)
 
 #%% Testing class accuracy
 classes = ('No Defect','Defect')
