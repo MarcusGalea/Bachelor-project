@@ -328,7 +328,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         grace_period=1,
         reduction_factor=2)
     reporter = CLIReporter(
-        parameter_columns=["l1", "l2", "lr", "batch_size"],
+        parameter_columns=["l1", "l2", "lr", "kernw","kernlayers","weight"],
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
         partial(train_cifar,checkpoint_dir = dname,data_dir = direc+series,labels=labels,images=images),
@@ -344,7 +344,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"])
+    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"],kernw = best_trial.config["kernw"],kernlayers = best_trial.config["kernlayers"])
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda:0"
