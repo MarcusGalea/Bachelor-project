@@ -73,29 +73,7 @@ elif user == "HPC":
 datadir = direc+series
 avg_im = read_image(datadir +"_average_cell.png")[0]
 
-#from data_sets.create_custom_1 import CustomImageDataset
-# %%
- 
-class CustomImageDataset(Dataset):
-    def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
-        self.img_labels = pd.read_csv(annotations_file)
-        self.img_dir = img_dir
-        self.transform = transform
-        self.target_transform = target_transform
-
-    def __len__(self):
-        return len(self.img_labels)
-
-    def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
-        image = read_image(img_path)
-        label = self.img_labels.iloc[idx, 1]
-        if self.transform:
-            image = self.transform(image)
-        if self.target_transform:
-            label = self.target_transform(label)
-        return image[0:1].type(torch.FloatTensor), labels
-    
+#from data_sets.create_custom_1 import CustomImageDataset    
 #%%
 class Net(nn.Module):
     def __init__(self,
@@ -152,7 +130,33 @@ optimizer = torch.optim.Adam(net.parameters(),lr =0.0036738332141314682)
     
 #%%
 sample_test = False
-data = CustomImageDataset(annotations_file = datadir + labels,img_dir = datadir + images,transform = transforms.RandomVerticalFlip())
+
+class CustomImageDataset(Dataset):
+    def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
+        self.img_labels = pd.read_csv(annotations_file)
+        self.img_dir = img_dir
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_labels)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
+        image = read_image(img_path)
+        label = self.img_labels.iloc[idx, 1]
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image[0:1].type(torch.FloatTensor), label
+
+
+
+#def load_data(data_dir= None):
+data = CustomImageDataset(annotations_file = direc+series+labels,
+                          img_dir = direc+series+images,
+                          transform = transforms.RandomVerticalFlip())
 
 
 labels = data.img_labels.to_numpy()[:,1]
@@ -184,12 +188,8 @@ train_labels = labels[train_indices]
 test_labels = labels[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
-train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-if sample_test:
-    test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
-else:
-    test_sampler = None
-
+train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
+test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #device = "cuda" if torch.cuda.is_available() else "cpu"
 device = "cpu"
@@ -206,12 +206,11 @@ train_loader = DataLoader(
     **kwargs
 )
 
-
 #dataloader for test data
 test_loader = DataLoader(
     test_split,
     shuffle=False,
-    sampler = test_sampler,
+    #sampler = test_sampler,
     batch_size=batch_size,
     **kwargs
 )
