@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 from torchvision.io import read_image
 
 #%%
-PATH = "NN_1_6.pt"
+PATH = "NN_1_7.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))

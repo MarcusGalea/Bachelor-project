@@ -250,6 +250,8 @@ with torch.no_grad():
         _, predictions = torch.max(outputs, 1)
         # collect the correct predictions for each class
         for label, prediction in zip(labels, predictions):
+            print(label)
+            print(classes)
             if label == prediction:
                 correct_pred[classes[label]] += 1
             total_pred[classes[label]] += 1
