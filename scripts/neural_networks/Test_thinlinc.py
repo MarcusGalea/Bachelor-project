@@ -249,6 +249,7 @@ with torch.no_grad():
         outputs = net(images)
         _, predictions = torch.max(outputs, 1)
         # collect the correct predictions for each class
+        print(labels)
         for label, prediction in zip(labels, predictions):
             print(label)
             print(classes)
