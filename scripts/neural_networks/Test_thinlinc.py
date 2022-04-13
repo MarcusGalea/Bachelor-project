@@ -128,6 +128,27 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
+net = Net(kernw, kernlayers, l1, l2, imagew, drop_p)
+
+device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda:0"
+    if torch.cuda.device_count() > 1:
+        print(device)
+        net = nn.DataParallel(net)
+
+net.to(device)
+
+
+w = torch.tensor([1.,10.])
+if device == "cuda:0":
+    w = w.type(torch.cuda.FloatTensor)#.to(device)
+
+criterion = nn.CrossEntropyLoss(weight=w)
+
+optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
+    
 #%%
 def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
     data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
