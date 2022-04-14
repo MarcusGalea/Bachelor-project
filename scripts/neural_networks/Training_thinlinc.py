@@ -232,6 +232,7 @@ for epoch in range(10):  # loop over the dataset multiple times
         inputs /= 255 #range = (-1,1)
         inputs += 1 # range = (0,2)
         inputs /= 2 # range = (0,1)
+        inputs, labels = inputs.to(device), labels.to(device)
         if device == "cuda:0":
             inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)
