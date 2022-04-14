@@ -187,7 +187,7 @@ test_labels = labels[test_indices]
 train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
 
 
