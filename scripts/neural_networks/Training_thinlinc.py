@@ -41,8 +41,8 @@ os.chdir(parent_folder)
 
 # %%
 device = "cpu"
-#if torch.cuda.is_available():
-    #device = "cuda:0"
+if torch.cuda.is_available():
+    device = "cuda:0"
 
 global datadir
 global labels
@@ -108,9 +108,6 @@ class Net(nn.Module):
     
 net = Net(kernw=90, kernlayers=6, l1=128, l2=4, imagew=400, drop_p=0.25)
 
-device = "cpu"
-
-
 if torch.cuda.is_available():
     device = "cuda:0"
     if torch.cuda.device_count() > 1:
@@ -118,7 +115,6 @@ if torch.cuda.is_available():
         net = nn.DataParallel(net)
 
 net.to(device)
-
 
 w = torch.tensor([1.,40.])
 if device == "cuda:0":
@@ -191,8 +187,7 @@ test_labels = labels[test_indices]
 train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
-#device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
 
 
@@ -232,7 +227,6 @@ for epoch in range(10):  # loop over the dataset multiple times
         inputs /= 255 #range = (-1,1)
         inputs += 1 # range = (0,2)
         inputs /= 2 # range = (0,1)
-        inputs, labels = inputs.to(device), labels.to(device)
         if device == "cuda:0":
             inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)
