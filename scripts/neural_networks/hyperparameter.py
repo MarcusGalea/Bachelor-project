@@ -320,7 +320,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
         "kernlayers": tune.choice([4, 6, 8, 10, 12, 14]),
         "weight": tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
-        "dropout": tune.choice([0.25,0.5,0.75])
+        "dropout": tune.choice([0.4,0.5,0.6,0.7])
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
@@ -353,7 +353,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(best_trained_model)
     best_trained_model.to(device)
-    torch.save(best_trained_model.state_dict(),"NN_1_7.pt")
+    #torch.save(best_trained_model.state_dict(),"NN_1_7.pt")
 
     best_checkpoint_dir = best_trial.checkpoint.value
     model_state, optimizer_state = torch.load(os.path.join(
@@ -366,4 +366,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=20, max_num_epochs=10, gpus_per_trial=1)
+    main(num_samples=500, max_num_epochs=10, gpus_per_trial=1)

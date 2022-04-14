@@ -110,13 +110,13 @@ net = Net(kernw=90, kernlayers=6, l1=128, l2=4, imagew=400, drop_p=0.25)
 
 device = "cpu"
 
-"""
+
 if torch.cuda.is_available():
     device = "cuda:0"
     if torch.cuda.device_count() > 1:
         print(device)
         net = nn.DataParallel(net)
-"""
+
 net.to(device)
 
 
