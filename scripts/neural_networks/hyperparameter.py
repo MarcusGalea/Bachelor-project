@@ -316,10 +316,10 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
-        "lr": tune.loguniform(1e-4, 1e-1),
+        "lr": tune.loguniform(1e-5, 1e-3),
         "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
-        "kernlayers": tune.choice([4, 6, 8, 10, 12, 14]),
-        "weight": tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
+        "kernlayers": tune.choice([6, 8, 10, 12]),
+        "weight": tune.choice([[1.,40.]])#tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
         "dropout": tune.choice([0.4,0.5,0.6])
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
@@ -339,14 +339,14 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         num_samples=num_samples,
         scheduler=scheduler,
         progress_reporter=reporter)
-    best_trial = result.get_best_trial("loss", "min", "last")
+    best_trial = result.get_best_trial("accuracy", "max", "last")
     print("Best trial config: {}".format(best_trial.config))
     print("Best trial final validation loss: {}".format(
         best_trial.last_result["loss"]))
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"],kernw = best_trial.config["kernw"],kernlayers = best_trial.config["kernlayers"])
+    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"],kernw = best_trial.config["kernw"],kernlayers = best_trial.config["kernlayers"],drop_p = best_trial.config["dropout"])
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda:0"
@@ -366,4 +366,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=250, max_num_epochs=10, gpus_per_trial=2)
+    main(num_samples=200, max_num_epochs=10, gpus_per_trial=2)
