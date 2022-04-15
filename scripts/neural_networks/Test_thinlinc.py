@@ -102,10 +102,9 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=70, kernlayers=6, l1=100, l2=50, imagew=400, drop_p=0.5)
+net = Net(kernw=90, kernlayers=10, l1=100, l2=50, imagew=400, drop_p=0.5)
 
 device = "cpu"
-
 
 if torch.cuda.is_available():
     device = "cuda:0"
@@ -114,7 +113,6 @@ if torch.cuda.is_available():
         net = nn.DataParallel(net)
 
 net.to(device)
-
 
 w = torch.tensor([1.,40.])
 if device == "cuda:0":
@@ -211,7 +209,7 @@ test_loader = DataLoader(
 )
     
 #%%
-PATH = "NN_1_10.pt"
+PATH = "NN_1_11.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
