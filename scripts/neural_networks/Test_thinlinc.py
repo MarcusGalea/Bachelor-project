@@ -102,7 +102,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=90, kernlayers=10, l1=100, l2=50, imagew=400, drop_p=0.5)
+net = Net(kernw=70, kernlayers=6, l1=100, l2=50, imagew=400, drop_p=0.5)
 
 device = "cpu"
 
