@@ -106,7 +106,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=90, kernlayers=10, l1=100, l2=50, imagew=400, drop_p=0.5)
+net = Net(kernw=50, kernlayers=10, l1=256, l2=128, imagew=400, drop_p=0.5)
 
 if torch.cuda.is_available():
     device = "cuda:0"
@@ -122,7 +122,7 @@ if device == "cuda:0":
 
 criterion = nn.CrossEntropyLoss(weight=w)
 
-optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
+optimizer = torch.optim.Adam(net.parameters(),lr =0.00833)
     
 #%%
 sample_test = False
@@ -250,6 +250,6 @@ for epoch in range(10):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_11.pt"
+PATH = "NN_1_9.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_11.csv",header = None, index = None)
+pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_9.csv",header = None, index = None)
