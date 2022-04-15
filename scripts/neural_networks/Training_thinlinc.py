@@ -106,7 +106,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=90, kernlayers=6, l1=128, l2=4, imagew=400, drop_p=0.25)
+net = Net(kernw=70, kernlayers=10 l1=100, l2=50, imagew=400, drop_p=0.5)
 
 if torch.cuda.is_available():
     device = "cuda:0"
@@ -250,6 +250,6 @@ for epoch in range(10):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_8.pt"
+PATH = "NN_1_10.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_8.csv",header = None, index = None)
+pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_10.csv",header = None, index = None)
