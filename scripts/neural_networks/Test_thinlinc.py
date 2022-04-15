@@ -102,7 +102,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=70, kernlayers=10, l1=100, l2=50, imagew=400, drop_p=0.5)
+net = Net(kernw=50, kernlayers=10, l1=256, l2=128, imagew=400, drop_p=0.5)
 
 device = "cpu"
 
@@ -122,7 +122,7 @@ if device == "cuda:0":
 
 criterion = nn.CrossEntropyLoss(weight=w)
 
-optimizer = torch.optim.Adam(net.parameters(),lr =0.0036738332141314682)
+optimizer = torch.optim.Adam(net.parameters(),lr =0.00833)
     
 #%%
 sample_test = False
