@@ -211,7 +211,7 @@ test_loader = DataLoader(
 )
     
 #%%
-PATH = "NN_1_8.pt"
+PATH = "NN_1_10.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
