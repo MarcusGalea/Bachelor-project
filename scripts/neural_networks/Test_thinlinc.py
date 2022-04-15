@@ -40,10 +40,6 @@ os.chdir(parent_folder)
 
 
 # %%
-device = "cpu"
-#if torch.cuda.is_available():
-    #device = "cuda:0"
-
 global datadir
 global labels
 global images
@@ -110,13 +106,13 @@ net = Net(kernw=90, kernlayers=6, l1=128, l2=4, imagew=400, drop_p=0.25)
 
 device = "cpu"
 
-"""
+
 if torch.cuda.is_available():
     device = "cuda:0"
     if torch.cuda.device_count() > 1:
         print(device)
         net = nn.DataParallel(net)
-"""
+
 net.to(device)
 
 
@@ -192,7 +188,6 @@ train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_
 test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
 kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
 
 
@@ -216,7 +211,7 @@ test_loader = DataLoader(
 )
     
 #%%
-PATH = "NN_1_7.pt"
+PATH = "NN_1_8.pt"
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
@@ -246,10 +241,10 @@ with torch.no_grad():
         outputs = net(images)
         _, predictions = torch.max(outputs, 1)
         # collect the correct predictions for each class
-        print(labels)
+        #print(labels)
         for label, prediction in zip(labels, predictions):
-            print(label)
-            print(classes)
+            #print(label)
+            #print(classes)
             if label == prediction:
                 correct_pred[classes[label]] += 1
             total_pred[classes[label]] += 1
