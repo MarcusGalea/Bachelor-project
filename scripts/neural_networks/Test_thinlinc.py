@@ -212,7 +212,7 @@ test_loader = DataLoader(
 PATH = "NN_1_11.pt"
 
 if device == "cuda:0":
-    net.load_state_dict(torch.load(PATH))
+    net.load_state_dict(torch.load(PATH), strict = False)
 elif device == "cpu":
     net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
     
