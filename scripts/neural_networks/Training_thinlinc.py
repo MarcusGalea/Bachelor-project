@@ -49,11 +49,11 @@ global labels
 global images
 global avg_im
 
-user = "HPC"
+user = "Aleksander"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
     series = r"AllSeries\\"
-    images = r"CelssCorr_resize\\"
+    images = r"CellsCorr_resize300\\"
     labels = r"all_labels.csv"
     
     
@@ -106,7 +106,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=90, kernlayers=10, l1=100, l2=50, imagew=400, drop_p=0.5)
+net = Net(kernw=90, kernlayers=10, l1=100, l2=50, imagew=300, drop_p=0.5)
 
 if torch.cuda.is_available():
     device = "cuda:0"
@@ -125,6 +125,21 @@ criterion = nn.CrossEntropyLoss(weight=w)
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
     
 #%%
+class Accumulator:
+    """For accumulating sums over `n` variables."""
+    def __init__(self, n):
+        """Defined in :numref:`sec_softmax_scratch`"""
+        self.data = [0.0] * n
+
+    def add(self, *args):
+        self.data = [a + float(b) for a, b in zip(self.data, args)]
+        
+    def reset(self):
+        self.data = [0.0] * len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+    
 sample_test = False
 
 class CustomImageDataset(Dataset):
@@ -216,9 +231,10 @@ N = len(train_loader)
 
 
 table = []
-for epoch in range(15):  # loop over the dataset multiple times
+for epoch in range(10):  # loop over the dataset multiple times
 
     running_loss = 0.0
+    metric = Accumulator(3)
     for i, datas in enumerate(train_loader):
         # get the inputs; data is a list of [inputs, labels]
         #remove average image to remove lines
@@ -243,13 +259,50 @@ for epoch in range(15):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
+        
+        _,predictions = torch.max(outputs, 1)
+        
+        correct = (predictions == labels).sum().item()
+
+        
+        with torch.no_grad():
+            metric.add(1 * inputs.shape[0],float(correct),inputs.shape[0])
+            
+        train_l = metric[0]/metric[2]
+        train_acc = metric[1]/metric[2]
+        
+        #print(train_l)
+        #print(train_acc)
+        
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for i, data in enumerate(test_loader, 0):
+                images, labels = data
+                images -= avg_im #range(-250,250)
+                images /= 255 #range(-1,1)
+                images += 1 #range(0,2)
+                images /= 2 #range(0,1)
+                if device == "cuda:0":
+                    images = images.type(torch.cuda.FloatTensor)#.to(device)
+                    labels = labels.type(torch.cuda.LongTensor)
+                # calculate outputs by running images through the network
+                outputs = net(images)
+
+                # the class with the highest energy is what we choose as prediction
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+                #print(100*correct//total)
+        test_acc = correct/total
+        #print(test_acc)
 
         if i % printfreq == printfreq-1:    # print every 2000 mini-batches
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
-            table.append([epoch +1, i+1, running_loss / printfreq])
+            loss_table.append([epoch +1, i+1, running_loss / printfreq,train_l,train_acc,test_acc])
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_12.pt"
+PATH = "NN_1_2_redo.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_12.csv",header = None, index = None)
+pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_12.csv",header = ["epoch","num batch","old_loss","new_loss","train_acc","test_acc"], index = None)

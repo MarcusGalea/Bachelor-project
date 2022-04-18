@@ -24,11 +24,11 @@ os.chdir(direc)
 #%%
 
 k = 0
-#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
+direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
-images = direc + series + r"CellsCorr_resize\\"
-faulty_images = direc + series + r"CellsCorr_faulty\\"
+images = direc + series + r"CellsCorr_resize300\\"
+#faulty_images = direc + series + r"CellsCorr_faulty\\"
 labels = direc + series + r"MaskGT\\"
 
 y = []
@@ -70,7 +70,7 @@ for label in os.listdir(labels):
     try:
         y[dic[serie+txt]][1] = 1
         im_title = "_resize_Serie_" +serie+ "_ImageCorr"+txt+".png"
-        shutil.copyfile(images+im_title, faulty_images+im_title)
+        #shutil.copyfile(images+im_title, faulty_images+im_title)
         im = mpimg.imread(images+im_title)[0]
         avg.append(np.mean(im))
         
@@ -79,4 +79,4 @@ for label in os.listdir(labels):
         os.remove(labels+label)
         continue
 
-pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)
+pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)
