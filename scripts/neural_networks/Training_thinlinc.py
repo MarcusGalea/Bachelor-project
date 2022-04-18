@@ -298,7 +298,7 @@ for epoch in range(10):  # loop over the dataset multiple times
         #print(test_acc)
 
         if i % printfreq == printfreq-1:    # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
+            #print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
             loss_table.append([epoch +1, i+1, running_loss / printfreq,train_l,train_acc,test_acc])
             running_loss = 0.0
 
@@ -306,3 +306,68 @@ print('Finished Training')
 PATH = "NN_1_2_redo.pt"
 torch.save(net.state_dict(), PATH)
 pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_2.csv",header = ["epoch","num batch","old_loss","new_loss","train_acc","test_acc"], index = None)
+
+#%% Testing class accuracy
+classes = ('No Defect','Defect')
+# prepare to count predictions for each class
+correct_pred = {classname: 0 for classname in classes}
+total_pred = {classname: 0 for classname in classes}
+
+# again no gradients needed
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data #range(0,250)
+        images -= avg_im #range(-250,250)
+        images /= 255 #range(-1,1)
+        images += 1 #range(0,2)
+        images /= 2 #range(0,1)
+        
+        
+        if device == "cuda:0":
+            images = images.type(torch.cuda.FloatTensor)#.to(device)
+            labels = labels.type(torch.cuda.LongTensor)  
+        outputs = net(images)
+        _, predictions = torch.max(outputs, 1)
+        # collect the correct predictions for each class
+        #print(labels)
+        for label, prediction in zip(labels, predictions):
+            #print(label)
+            #print(classes)
+            if label == prediction:
+                correct_pred[classes[label]] += 1
+            total_pred[classes[label]] += 1
+
+        # print accuracy for each class
+    for classname, correct_count in correct_pred.items():
+        accuracy = 100 * float(correct_count) / total_pred[classname]
+        print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+    
+#%% Confusion matrix
+#TP FP
+#FN TN
+C = np.array([[0,0],[0,0]])
+k = 0
+with torch.no_grad():
+    for data in test_loader:
+        images, labels = data #range(0,250)
+        images -= avg_im #range(-250,250)
+        images /= 255 #range(-1,1)
+        images += 1 #range(0,2)
+        images /= 2 #range(0,1)
+        if device == "cuda:0":
+            images = images.type(torch.cuda.FloatTensor)#.to(device)
+            labels = labels.type(torch.cuda.LongTensor)  
+        outputs = net(images)
+        _, predictions = torch.max(outputs, 1)
+        for label, prediction in zip(labels,predictions):
+            if label == 1 and prediction == 1:
+                C[0,0] += 1
+            if label == 0 and prediction == 1:
+                C[0,1] += 1
+            if label == 1 and prediction == 0:
+                C[1,0] += 1
+            if label == 0 and prediction == 0:
+                C[1,1] += 1
+        k += 1
+
+print(C)
