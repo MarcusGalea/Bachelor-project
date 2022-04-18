@@ -71,7 +71,7 @@ elif user == "HPC":
 
 
 datadir = direc+series
-avg_im = read_image(datadir +"_average_cell.png")[0]
+avg_im = read_image(datadir +"_average_cell300.png")[0]
 
 #from data_sets.create_custom_1 import CustomImageDataset    
 #%%
