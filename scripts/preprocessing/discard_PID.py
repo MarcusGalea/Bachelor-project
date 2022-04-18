@@ -17,8 +17,8 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 #%%
-#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
+direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
 images = direc + series + r"CellsCorr_resize\\"
 masks = direc + series + r"MaskGT\\"
