@@ -49,7 +49,7 @@ global labels
 global images
 global avg_im
 
-user = "Aleksander"
+user = "HPC"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
     series = r"AllSeries\\"
@@ -66,8 +66,8 @@ elif user == "Marcus":
 elif user == "HPC":
     direc = '/zhome/35/5/147366/Desktop/'
     series = ''
-    images = 'CellsCorr_resize'
-    labels = 'labels.csv'
+    images = 'CellsCorr_resize300'
+    labels = 'labels300.csv'
 
 
 datadir = direc+series
@@ -94,7 +94,7 @@ class Net(nn.Module):
             (((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
-        self.drop = nn.Dropout(drop_p)
+        #self.drop = nn.Dropout(drop_p)
 
 
     def forward(self, x):
@@ -106,7 +106,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=90, kernlayers=10, l1=100, l2=50, imagew=300, drop_p=0.5)
+net = Net(kernw=50, kernlayers=10, l1=80, l2=40, imagew=300)#, drop_p=0.5)
 
 if torch.cuda.is_available():
     device = "cuda:0"
@@ -305,4 +305,4 @@ for epoch in range(10):  # loop over the dataset multiple times
 print('Finished Training')
 PATH = "NN_1_2_redo.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_12.csv",header = ["epoch","num batch","old_loss","new_loss","train_acc","test_acc"], index = None)
+pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_2.csv",header = ["epoch","num batch","old_loss","new_loss","train_acc","test_acc"], index = None)
