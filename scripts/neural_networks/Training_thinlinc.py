@@ -112,6 +112,7 @@ if torch.cuda.is_available():
     device = "cuda:0"
     if torch.cuda.device_count() > 1:
         print(device)
+        print(torch.cuda.device_count())
         net = nn.DataParallel(net)
 
 net.to(device)
@@ -123,7 +124,7 @@ if device == "cuda:0":
 criterion = nn.CrossEntropyLoss(weight=w)
 
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
-    
+    """
 #%%
 class Accumulator:
     """For accumulating sums over `n` variables."""
@@ -370,4 +371,4 @@ with torch.no_grad():
                 C[1,1] += 1
         k += 1
 
-print(C)
+print(C)"""
