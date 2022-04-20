@@ -233,7 +233,7 @@ N = len(train_loader)
 
 
 table = []
-for epoch in range(10):  # loop over the dataset multiple times
+for epoch in range(7):  # loop over the dataset multiple times
 
     running_loss = 0.0
     metric = Accumulator(3)
