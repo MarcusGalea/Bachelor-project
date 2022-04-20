@@ -94,7 +94,7 @@ class Net(nn.Module):
             (((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
-        self.drop = nn.Dropout(drop_p)
+        #self.drop = nn.Dropout(drop_p)
 
 
     def forward(self, x):
@@ -106,7 +106,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=70, kernlayers=10, l1=100, l2=50, imagew=300, drop_p=0.5)
+net = Net(kernw=50, kernlayers=10, l1=80, l2=40, imagew=300)#, drop_p=0.5)
 
 if torch.cuda.is_available():
     device = "cuda:0"
