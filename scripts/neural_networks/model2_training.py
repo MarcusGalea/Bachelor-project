@@ -199,7 +199,8 @@ def main():
     indices = torch.randperm(len(dataset)).tolist()
     dataset = torch.utils.data.Subset(dataset, indices[:-50])
     dataset_test = torch.utils.data.Subset(dataset_test, indices[-50:])
-
+    
+    
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=8, shuffle=True, num_workers=1,
@@ -224,7 +225,7 @@ def main():
                                                    gamma=0.1)
 
     # let's train it for 10 epochs
-    num_epochs = 1
+    num_epochs = 10
 
     for epoch in range(num_epochs):
         # train for one epoch, printing every 10 iterations
