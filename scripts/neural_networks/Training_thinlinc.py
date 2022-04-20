@@ -117,7 +117,7 @@ if torch.cuda.is_available():
 
 net.to(device)
 
-w = torch.tensor([1.,40.])
+w = torch.tensor([1.,20.])
 if device == "cuda:0":
     w = w.type(torch.cuda.FloatTensor)#.to(device)
 
@@ -126,11 +126,11 @@ criterion = nn.CrossEntropyLoss(weight=w)
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
 
 #%%
-"""
+
 class Accumulator:
     "For accumulating sums over `n` variables."
     def __init__(self, n):
-        Defined in :numref:`sec_softmax_scratch`"
+        "Defined in :numref:`sec_softmax_scratch`"
         self.data = [0.0] * n
 
     def add(self, *args):
@@ -201,8 +201,8 @@ train_labels = labels[train_indices]
 test_labels = labels[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
-train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
-test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
+train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
+#test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
@@ -372,4 +372,4 @@ with torch.no_grad():
                 C[1,1] += 1
         k += 1
 
-print(C)"""
+print(C)
