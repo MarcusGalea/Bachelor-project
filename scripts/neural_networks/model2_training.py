@@ -134,12 +134,12 @@ class CustomImageDataset2(Dataset):
             masks[mask1 > 0] = k+1
 
         # get bounding box coordinates for each mask
-            pos = np.where(mask1==1)
+            pos = np.where(mask1)
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
             ymax = np.max(pos[0])
-            boxes.append([xmax, ymax, xmin, ymin])
+            boxes.append([xmin, ymin, xmax, ymax])
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
