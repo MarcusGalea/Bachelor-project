@@ -134,7 +134,7 @@ class CustomImageDataset2(Dataset):
             masks[mask1 > 0] = k+1
 
         # get bounding box coordinates for each mask
-            pos = np.where(mask1 > 0.)
+            pos = np.where(mask1 == 1)
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
