@@ -102,7 +102,7 @@ class CustomImageDataset2(Dataset):
         mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_objs))
         iscrowd = np.zeros((num_labels,))
         
-        masks = np.zeros((mask.shape[0],mask.shape[1]))
+        masks = np.zeros((mask.shape[0],mask.shape[1],1))
         labels = []
         boxes = []
         for i in range(num_labels):
