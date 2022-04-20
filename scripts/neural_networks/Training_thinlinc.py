@@ -124,12 +124,13 @@ if device == "cuda:0":
 criterion = nn.CrossEntropyLoss(weight=w)
 
 optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
-"""
+
 #%%
+"""
 class Accumulator:
-    """For accumulating sums over `n` variables."""
+    "For accumulating sums over `n` variables."
     def __init__(self, n):
-        """Defined in :numref:`sec_softmax_scratch`"""
+        Defined in :numref:`sec_softmax_scratch`"
         self.data = [0.0] * n
 
     def add(self, *args):
