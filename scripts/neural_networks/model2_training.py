@@ -28,6 +28,7 @@ import numpy as np
 from functools import partial
 import os
 from pathlib import Path
+import matplotlib.image as mpimg
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 #os.chdir(dname)
@@ -194,11 +195,11 @@ def main():
 
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=8, shuffle=True, num_workers=4,
+        dataset, batch_size=8, shuffle=True, num_workers=1,
         collate_fn=utils.collate_fn)
 
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1, shuffle=False, num_workers=4,
+        dataset_test, batch_size=1, shuffle=False, num_workers=1,
         collate_fn=utils.collate_fn)
 
     # get the model using our helper function
