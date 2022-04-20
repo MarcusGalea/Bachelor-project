@@ -184,8 +184,8 @@ def main():
     # our dataset has two classes only - background and person
     num_classes = 5
     # use our dataset and defined transformations
-    dataset = PennFudanDataset(direc, get_transform(train=True))
-    dataset_test = PennFudanDataset(direc, get_transform(train=False))
+    dataset = CustomImageDataset2(direc, get_transform(train=True))
+    dataset_test = CustomImageDataset2(direc, get_transform(train=False))
 
     # split the dataset in train and test set
     indices = torch.randperm(len(dataset)).tolist()
