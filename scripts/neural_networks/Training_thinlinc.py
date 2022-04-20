@@ -106,7 +106,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
     
-net = Net(kernw=50, kernlayers=10, l1=80, l2=40, imagew=300)#, drop_p=0.5)
+net = Net(kernw=70, kernlayers=10, l1=100, l2=50, imagew=300, drop_p=0.5)
 
 if torch.cuda.is_available():
     device = "cuda:0"
@@ -305,9 +305,9 @@ for epoch in range(10):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_2_redo.pt"
+PATH = "NN_1_5_redo.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_2.csv",header = ["epoch","num batch","old_loss","new_loss","train_acc","test_acc"], index = None)
+pd.DataFrame(table).to_csv(r"zhome\35\5\147366\Desktop\loss_1_5.csv",header = ["epoch","num batch","old_loss","new_loss","train_acc","test_acc"], index = None)
 
 #%% Testing class accuracy
 classes = ('No Defect','Defect')
