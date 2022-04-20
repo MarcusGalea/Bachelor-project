@@ -174,7 +174,7 @@ def get_transform(train):
     transforms.append(T.ToTensor())
     if train:
         transforms.append(T.RandomHorizontalFlip(0.5))
-        transforms.append(T.RandomVerticalFlip(0.5))
+        #transforms.append(T.RandomVerticalFlip(0.5))
     return T.Compose(transforms)
 
 def main():
