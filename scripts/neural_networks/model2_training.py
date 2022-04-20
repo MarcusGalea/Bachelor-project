@@ -84,7 +84,7 @@ class CustomImageDataset2(Dataset):
         # load images and masks
         img_path = os.path.join(self.root, "CellsCorr_faulty", self.imgs[idx])
         mask_path = os.path.join(self.root, "MaskGT", self.masks[idx])
-        img = mpimg.imread(img_path)[:,:,0]
+        img = mpimg.imread(img_path)
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
         # with 0 being background
