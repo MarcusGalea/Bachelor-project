@@ -139,6 +139,11 @@ class CustomImageDataset2(Dataset):
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
             ymax = np.max(pos[0])
+            if xmin == xmax:
+                xmax += 1
+            if ymin == ymax:
+                ymax += 1
+            
             boxes.append([xmin, ymin, xmax, ymax])
 
         # convert everything into a torch.Tensor
