@@ -182,7 +182,7 @@ def get_transform(train):
     transforms.append(T.ToTensor())
     if train:
         transforms.append(T.RandomHorizontalFlip(0.5))
-        #transforms.append(T.RandomVerticalFlip(0.5))
+        transforms.append(transforms.RandomVerticalFlip(0.5))
     return T.Compose(transforms)
 
 def main():
@@ -211,7 +211,8 @@ def main():
         collate_fn=utils.collate_fn)
 
     # get the model using our helper function
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, num_classes = 5)
+    #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, num_classes = 5)
+    model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=False)
     
     # move model to the right device
     model.to(device)
@@ -235,7 +236,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_1.pt"
+    PATH = "NN_2_2.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
