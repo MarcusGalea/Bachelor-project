@@ -44,12 +44,12 @@ class CustomImageDataset2(Dataset):
 
     def __getitem__(self, idx):
         
-        N_im = 400
+        #N_im = 400
         
         # load images and masks
         img_path = os.path.join(self.root, "CellsCorr_faulty", self.imgs[idx])
         mask_path = os.path.join(self.root, "MaskGT", self.masks[idx])
-        img = mpimg.imread(img_path)[:,:,0]
+        img = mpimg.imread(img_path)
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
         # with 0 being background
@@ -58,17 +58,17 @@ class CustomImageDataset2(Dataset):
         mask = mask['GTMask']
         
         num_labels = len(temp_label)
-        """
+        
         try:
             num_objs = mask.shape[2]
         except IndexError:
             num_objs = 1
-        """
+        
             
         mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
         iscrowd = np.zeros((num_labels,))
         
-        masks = np.zeros((N_im,N_im))
+        masks = np.zeros((mask.shape[0],mask.shape[1]))
         labels = []
         boxes = []
         for i in range(num_labels):
@@ -95,9 +95,9 @@ class CustomImageDataset2(Dataset):
             k += 1
                 
             #resize mask
-            mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
-            mask1[mask1 > 0] = 1
-            masks[mask1 > 0] = k+1
+            #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
+            mask1[mask1 > 0.5] = 1
+            masks[mask1 > 0.5] = k+1
 
         # get bounding box coordinates for each mask
             pos = np.where(mask1==1)
@@ -105,6 +105,10 @@ class CustomImageDataset2(Dataset):
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
             ymax = np.max(pos[0])
+            if xmin == xmax:
+                xmax += 1
+            if ymin == ymax:
+                ymax += 1
             boxes.append([xmin, ymin, xmax, ymax])
 
         # convert everything into a torch.Tensor
@@ -157,16 +161,15 @@ for i, data in enumerate(data_loader):
     im1 = img[0]
     target1 = target[0]
     print(len(target1["labels"]),len(target1["boxes"]))
-    """
+
     plt.imshow(im1, cmap = "gray")
     
-    for i,box in enumerate(target1["boxes"]):
+    for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
         plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i])    
         plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i])
         plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])
         plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
     break
-    """
     #print(i/N*100)
 
 #%%

@@ -27,7 +27,7 @@ k = 0
 direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 #direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
-images = direc + series + r"CellsCorr_resize300\\"
+images = direc + series + r"CellsCorr\\"
 faulty_images = direc + series + r"CellsCorr_faulty\\"
 labels = direc + series + r"MaskGT\\"
 
@@ -77,7 +77,7 @@ for label in os.listdir(labels):
 
     except KeyError:
         print("cells for "+txt+" are missing")
-        #os.remove(labels+label)
+        os.remove(labels+label)
         continue
 
-#pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)
+pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)
