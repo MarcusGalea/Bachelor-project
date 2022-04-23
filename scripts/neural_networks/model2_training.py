@@ -105,6 +105,7 @@ class CustomImageDataset2(Dataset):
         masks = np.zeros((mask.shape[0],mask.shape[1],1))
         labels = []
         boxes = []
+        """
         for i in range(num_labels):
             ## labels
             ID = temp_label[i][0][0]
@@ -117,24 +118,37 @@ class CustomImageDataset2(Dataset):
             if ID == 'Finger Failure':
                 labels.append(4)
         if len(labels)<1:
-            labels = [0]
+            labels = [0]"""
         
         
         k = 0
         for i in range(num_objs):
             mask1 = mask[:,:,i]
-            if not(mask1 == 1).any():
+            if not(mask1 == i+1).any():
                 continue
+            
+            ## labels
+            ID = temp_label[i][0][0]
+            if ID == 'Crack A':
+                labels.append(1)
+            if ID == 'Crack B':
+                labels.append(2)
+            if ID == 'Crack C':
+                labels.append(3)
+            if ID == 'Finger Failure':
+                labels.append(4)
 
             k += 1
                 
             #resize mask
             #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
-            mask1[mask1 > 0.5] = 1
-            masks[mask1 > 0.5] = k+1
+            #mask1[mask1 > 0.5] = 1
+            #masks[mask1 > 0.5] = k+1
 
         # get bounding box coordinates for each mask
-            pos = np.where(mask1 == 1)
+            pos = np.where(mask1 == i+1)
+            masks[pos] = i+1
+            
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
@@ -145,6 +159,9 @@ class CustomImageDataset2(Dataset):
                 ymax += 1
             
             boxes.append([xmin, ymin, xmax, ymax])
+            
+        if len(labels)<1:
+            labels = [0]
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)

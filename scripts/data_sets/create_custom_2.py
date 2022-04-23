@@ -28,8 +28,8 @@ from skimage.transform import resize
 import utils
 
 #%%
-#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
+direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
 
 global mask1
@@ -70,9 +70,14 @@ class CustomImageDataset2(Dataset):
         
         masks = np.zeros((mask.shape[0],mask.shape[1]))
         labels = []
-        boxes = []
+        boxes = []        
+        
+        k = 0
         for i in range(num_labels):
-            ## labels
+            mask1 = mask[:,:,i]
+            if not(mask1==i+1).any():
+                continue
+            
             ID = temp_label[i][0][0]
             if ID == 'Crack A':
                 labels.append(1)
@@ -82,25 +87,18 @@ class CustomImageDataset2(Dataset):
                 labels.append(3)
             if ID == 'Finger Failure':
                 labels.append(4)
-        if len(labels)<1:
-            labels = [0]
-        
-        
-        k = 0
-        for i in range(num_labels):
-            mask1 = mask[:,:,i]
-            if not(mask1==1).any():
-                continue
 
             k += 1
                 
             #resize mask
             #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
-            mask1[mask1 > 0.5] = 1
-            masks[mask1 > 0.5] = k+1
+            #mask1[mask1 > 0.5] = 1
+            #masks[mask1 > 0.5] = k+1
 
         # get bounding box coordinates for each mask
-            pos = np.where(mask1==1)
+            pos = np.where(mask1==i+1)
+            masks[pos] = i+1
+            
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
@@ -110,6 +108,9 @@ class CustomImageDataset2(Dataset):
             if ymin == ymax:
                 ymax += 1
             boxes.append([xmin, ymin, xmax, ymax])
+        
+        if len(labels)<1:
+            labels = [0]
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -135,20 +136,21 @@ class CustomImageDataset2(Dataset):
 
     def __len__(self):
         return len(self.imgs)
-    
+"""    
 def collate_fn(batch):
     data_list, label_list = [], []
     for _data, _label in batch:
         data_list.append(_data)
         label_list.append(_label)
     return data_list,label_list
-    
+"""   
 #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 dataset = CustomImageDataset2(direc + series)
 
+import utils
 
 data_loader = torch.utils.data.DataLoader(
- dataset, batch_size=8, shuffle=True, num_workers=0,collate_fn = collate_fn)
+ dataset, batch_size=8, shuffle=True, num_workers=0,collate_fn = utils.collate_fn)
 
 
 #%%
@@ -161,7 +163,7 @@ for i, data in enumerate(data_loader):
     im1 = img[0]
     target1 = target[0]
     print(len(target1["labels"]),len(target1["boxes"]))
-
+    
     plt.imshow(im1, cmap = "gray")
     
     for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
@@ -169,6 +171,7 @@ for i, data in enumerate(data_loader):
         plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i])
         plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])
         plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
+    
     break
     #print(i/N*100)
 
