@@ -46,7 +46,7 @@ global labels
 global images
 global avg_im
 
-user = "Marcus"
+user = "HPC"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
     series = r"AllSeries\\"
@@ -61,7 +61,7 @@ elif user == "Marcus":
     labels = "labels.csv"
     
 elif user == "HPC":
-    direc = r'zhome\35\5\147366\Desktop\\'
+    direc = '/zhome/35/5/147366/Desktop/'
     series = ''
     images = 'CellsCorr_resize'
     labels = 'labels.csv'
@@ -94,10 +94,8 @@ class CustomImageDataset(Dataset):
         return image[0:1].type(torch.FloatTensor), label
 
 # %%
-def load_data(data_dir = None,labels=None,images=None, sample_test = False):
-    data = CustomImageDataset(annotations_file = data_dir+labels,
-                              img_dir = data_dir + images,
-                              transform = transforms.RandomVerticalFlip())
+def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
+    data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
     
     
     labels = data.img_labels.to_numpy()[:,1]
@@ -173,7 +171,8 @@ class Net(nn.Module):
                  kernlayers=6,
                  l1=120,  # number of outputs in first linear transformation
                  l2=84,  # number of outputs in second linear transformation
-                 imagew=400  # width/height of input image
+                 imagew=400,  # width/height of input image
+                 drop_p = 0.5 # dropout rate
                  ):
         super().__init__()
         # third arg: remove n-1 from img dim
@@ -184,6 +183,8 @@ class Net(nn.Module):
             (((imagew-kernw)//2-kernw//2)//2)**2*2*kernlayers, l1)
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
+        self.drop = nn.Dropout(drop_p)
+
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -196,8 +197,8 @@ class Net(nn.Module):
 
 
 # %%
-def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = None):
-    net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"])
+def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,images = None):
+    net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"],drop_p = config["dropout"])
     
     
     device = "cpu"
@@ -287,7 +288,7 @@ def train_cifar(config, checkpoint_dir=None, data_dir=None,labels=None,images = 
     
 
 # %%
-def test_accuracy(net, device="cpu",data_dir=None,labels=None,images=None):
+def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = images):
     trainloader, testloader = load_data(data_dir, labels, images)
 
     correct = 0
@@ -315,10 +316,11 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
-        "lr": tune.loguniform(1e-4, 1e-1),
+        "lr": tune.loguniform(1e-5, 1e-3),
         "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
-        "kernlayers": tune.choice([4, 6, 8, 10, 12, 14]),
-        "weight": tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]])
+        "kernlayers": tune.choice([6, 8, 10, 12]),
+        "weight": tune.choice([[1.,40.]])#tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
+        "dropout": tune.choice([0.4,0.5,0.6])
         # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
@@ -328,7 +330,7 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         grace_period=1,
         reduction_factor=2)
     reporter = CLIReporter(
-        parameter_columns=["l1", "l2", "lr", "batch_size"],
+        parameter_columns=["l1", "l2", "lr", "kernw","kernlayers","weight","dropout"],
         metric_columns=["loss", "accuracy", "training_iteration"])
     result = tune.run(
         partial(train_cifar,checkpoint_dir = dname,data_dir = direc+series,labels=labels,images=images),
@@ -337,21 +339,21 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         num_samples=num_samples,
         scheduler=scheduler,
         progress_reporter=reporter)
-    best_trial = result.get_best_trial("loss", "min", "last")
+    best_trial = result.get_best_trial("accuracy", "max", "last")
     print("Best trial config: {}".format(best_trial.config))
     print("Best trial final validation loss: {}".format(
         best_trial.last_result["loss"]))
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"])
+    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"],kernw = best_trial.config["kernw"],kernlayers = best_trial.config["kernlayers"],drop_p = best_trial.config["dropout"])
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda:0"
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(best_trained_model)
     best_trained_model.to(device)
-    torch.save(best_trained_model,"NN_1_6.pt")
+    #torch.save(best_trained_model.state_dict(),"NN_1_7.pt")
 
     best_checkpoint_dir = best_trial.checkpoint.value
     model_state, optimizer_state = torch.load(os.path.join(
@@ -364,4 +366,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=10, max_num_epochs=10, gpus_per_trial=4)
+    main(num_samples=200, max_num_epochs=10, gpus_per_trial=2)

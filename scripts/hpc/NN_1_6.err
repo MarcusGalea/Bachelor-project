@@ -1,0 +1,5 @@
+Loaded module: cuda/11.6
+2022-04-13 11:47:22,237	WARNING experiment.py:255 -- No name detected on trainable. Using DEFAULT.
+2022-04-13 11:47:22,241	INFO registry.py:69 -- Detected unknown callable for trainable. Converting to class.
+2022-04-13 11:54:21,829	WARNING util.py:163 -- The `start_trial` operation took 0.570 s, which may be a performance bottleneck.
+2022-04-13 12:08:10,134	INFO tune.py:639 -- Total run time: 1247.90 seconds (1247.62 seconds for the tuning loop).

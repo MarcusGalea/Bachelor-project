@@ -24,8 +24,8 @@ os.chdir(direc)
 #%%
 
 k = 0
-#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
+direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
 images = direc + series + r"CellsCorr_resize300\\"
 faulty_images = direc + series + r"CellsCorr_faulty\\"
@@ -41,7 +41,7 @@ m = 6
 min_avg = 1000
 for pic in os.listdir(images):
     if pic != "Thumbs.db":
-        serie = pic.split("_")[3]
+        serie = pic.split("_")[1]
         txt = pic.split("Corr")[1]
         txt = txt.split(".")[0]
         dic[serie+txt] = k
@@ -51,33 +51,33 @@ for pic in os.listdir(images):
 for label in os.listdir(labels):
     GT = loadmat(labels + label)
     mask1 = GT['GTMask']
-    
+
     try:
         N = mask1.shape[2]
     except IndexError:
         N = 1
-        
+
     mask = np.reshape(mask1,(mask1.shape[0],mask1.shape[1],N))
-    
-    if not(mask==1).any():
+
+    if not(mask == 1).any():
         print(label, 'discarded')
-        os.remove(labels+label)
+        #os.remove(labels+label)
         continue
-    
+
     serie = label.split("_")[2]
     txt = label.split("Image")[1]
     txt = txt.split(".")[0]
-    
+
     try:
         y[dic[serie+txt]][1] = 1
-        im_title = "_resize_Serie_" +serie+ "_ImageCorr"+txt+".png"
+        im_title = "Serie_" +serie+ "_ImageCorr"+txt+".png"
         shutil.copyfile(images+im_title, faulty_images+im_title)
         im = mpimg.imread(images+im_title)[0]
-        avg.append(np.mean(im))
-        
+        #avg.append(np.mean(im))
+
     except KeyError:
         print("cells for "+txt+" are missing")
-        os.remove(labels+label)
+        #os.remove(labels+label)
         continue
 
-pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)
+#pd.DataFrame(y).to_csv(direc + series + "all_labels.csv",header = None, index = None)
