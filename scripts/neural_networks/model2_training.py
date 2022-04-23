@@ -130,8 +130,8 @@ class CustomImageDataset2(Dataset):
                 
             #resize mask
             #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
-            #mask1[mask1 > 0] = 1
-            masks[mask1 > 0] = k+1
+            mask1[mask1 > 0.5] = 1
+            masks[mask1 > 0.5] = k+1
 
         # get bounding box coordinates for each mask
             pos = np.where(mask1 == 1)
