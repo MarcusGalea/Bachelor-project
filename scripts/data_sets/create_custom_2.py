@@ -155,7 +155,7 @@ data_loader = torch.utils.data.DataLoader(
 
 #%%
 
-colors = ["b","g,","r","c","m","y","k","w"]
+colors = ["b","g","r","c","m","y","k","w"]
 N = len(data_loader)
 for i, data in enumerate(data_loader):
     img,target = data
