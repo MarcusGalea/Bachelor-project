@@ -28,11 +28,11 @@ user = "HPC"
 if user == "HPC":
     direc = r'zhome\35\5\147366\Desktop\\'
     series = ''
-    images = 'CellsCorr_resize'
+    images = 'CellsCorr_resize300'
     labels = 'labels.csv'
 
-direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
@@ -67,8 +67,8 @@ labels = data.img_labels.to_numpy()[:,1]
 
 
 
-#seed #DON'T CHANGE, OR ALL PRINCIPAL COMPONENTS MUST BE REMADE
-#random.seed(10)
+#seed #DON'T CHANGE, otherwise test and train data will mix!!!!
+random.seed(10)
 
 #initialize sizes
 N = len(data)

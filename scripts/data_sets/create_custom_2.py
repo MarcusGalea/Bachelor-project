@@ -11,7 +11,6 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 
 os.chdir(dname)
-#%%
 import pandas as pd
 from math import ceil, floor
 from torchvision.io import read_image
@@ -59,12 +58,14 @@ class CustomImageDataset2(Dataset):
         mask = mask['GTMask']
         
         num_labels = len(temp_label)
+        """
         try:
             num_objs = mask.shape[2]
         except IndexError:
             num_objs = 1
+        """
             
-        mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_objs))
+        mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
         iscrowd = np.zeros((num_labels,))
         
         masks = np.zeros((N_im,N_im))
@@ -86,7 +87,7 @@ class CustomImageDataset2(Dataset):
         
         
         k = 0
-        for i in range(num_objs):
+        for i in range(num_labels):
             mask1 = mask[:,:,i]
             if not(mask1==1).any():
                 continue
@@ -143,34 +144,59 @@ dataset = CustomImageDataset2(direc + series)
 
 
 data_loader = torch.utils.data.DataLoader(
- dataset, batch_size=2, shuffle=True, num_workers=0,collate_fn = collate_fn)
+ dataset, batch_size=8, shuffle=True, num_workers=0,collate_fn = collate_fn)
 
 
 #%%
+
+colors = ["b","g,","r","c","m","y","k","w"]
 N = len(data_loader)
 for i, data in enumerate(data_loader):
     img,target = data
-    print(i/N*100)
-
+    
+    im1 = img[0]
+    target1 = target[0]
+    print(len(target1["labels"]),len(target1["boxes"]))
+    """
+    plt.imshow(im1, cmap = "gray")
+    
+    for i,box in enumerate(target1["boxes"]):
+        plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i])    
+        plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i])
+        plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])
+        plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
+    break
+    """
+    #print(i/N*100)
 
 #%%
-N_im = 300
-im1 = "GT_Serie_2_Image_-12_4009_PC_Cell_Row6_Col_4.mat"
-im2 = "GT_Serie_1_Image_-16_4133_Cell_Row7_Col_2.mat"
-mask_path = direc + series + r"MaskGT\\"+ im2
 
-mask = loadmat(mask_path)
-temp_label = mask["GTLabel"]
-mask = mask["GTMask"]
+N_im = 400
 
+
+idx = 2
+
+# load images and masks
+img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
+mask_path = os.listdir(direc+series+"MaskGT")[idx]
+img = mpimg.imread(direc+series+r"CellsCorr_faulty\\"+img_path)[:,:,0]
+# note that we haven't converted the mask to RGB,
+# because each color corresponds to a different instance
+# with 0 being background
+mask = loadmat(direc+series+r"MaskGT\\"+mask_path)
+temp_label = mask['GTLabel']  
+print(len(temp_label))           
+mask = mask['GTMask']
 
 num_labels = len(temp_label)
+"""
 try:
     num_objs = mask.shape[2]
 except IndexError:
     num_objs = 1
+"""
     
-mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_objs))
+mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
 iscrowd = np.zeros((num_labels,))
 
 masks = np.zeros((N_im,N_im))
@@ -192,23 +218,19 @@ if len(labels)<1:
 
 
 k = 0
-for i in range(num_objs):
+for i in range(num_labels):
     mask1 = mask[:,:,i]
-    plt.imshow(mask1,cmap='gray')
-    plt.title("original")
-    plt.show()
-    if not(mask1==1).any():
-        continue
 
     k += 1
         
     #resize mask
     mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
     mask1[mask1 > 0] = 1
+    
+    if not(mask1==1).any():
+        continue    
+
     masks[mask1 > 0] = k+1
-    plt.imshow(mask1,cmap="gray")
-    plt.title("scaled")
-    plt.show()
 
 # get bounding box coordinates for each mask
     pos = np.where(mask1==1)
@@ -218,11 +240,12 @@ for i in range(num_objs):
     ymax = np.max(pos[0])
     boxes.append([xmin, ymin, xmax, ymax])
 
+
+
 # convert everything into a torch.Tensor
 boxes = torch.as_tensor(boxes, dtype=torch.float32)
 labels = torch.as_tensor(labels, dtype=torch.int64)
 masks = torch.as_tensor(masks, dtype=torch.uint8)
-
 
 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
 iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)

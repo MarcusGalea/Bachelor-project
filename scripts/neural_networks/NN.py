@@ -9,13 +9,14 @@ import os
 from pathlib import Path
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
+os.chdir(dname)
 
-pathname = Path(dname)
-parent_folder = pathname.parent.absolute()
-os.chdir(parent_folder)
+#pathname = Path(dname)
+#parent_folder = pathname.parent.absolute()
+#os.chdir(parent_folder)
 
 #get dataloader
-from data_sets.create_custom_1 import train_loader,test_loader
+from create_custom_1 import train_loader,test_loader
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -93,11 +94,13 @@ for PC in os.listdir(PC_link):
     k+= 1
 """
 net = Net(kernw = 70,
+          kernlayers = 10,
           l1=100,
           l2=50,
+          imagew = 300
           )
 
-avg_im = read_image(direc + series+"_average_cell.png")[0]
+avg_im = read_image(direc + series+"_average_cell300.png")[0]
 
 device = "cpu"
 
@@ -110,7 +113,7 @@ if torch.cuda.is_available():
 net.to(device)
 
 
-w = torch.tensor([1.,10.])
+w = torch.tensor([1.,15.])
 if device == "cuda:0":
     w = w.type(torch.cuda.FloatTensor)#.to(device)
 

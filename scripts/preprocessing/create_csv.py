@@ -27,7 +27,7 @@ k = 0
 #direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
 direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
 series = r"AllSeries\\"
-images = direc + series + r"CellsCorr_resize\\"
+images = direc + series + r"CellsCorr_resize300\\"
 faulty_images = direc + series + r"CellsCorr_faulty\\"
 labels = direc + series + r"MaskGT\\"
 
@@ -50,14 +50,14 @@ for pic in os.listdir(images):
 
 for label in os.listdir(labels):
     GT = loadmat(labels + label)
-    mask = GT['GTMask']
+    mask1 = GT['GTMask']
     
     try:
-        N = mask.shape[2]
+        N = mask1.shape[2]
     except IndexError:
         N = 1
         
-    mask = np.reshape(mask,(mask.shape[0],mask.shape[1],N))
+    mask = np.reshape(mask1,(mask1.shape[0],mask1.shape[1],N))
     
     if not(mask==1).any():
         print(label, 'discarded')
@@ -67,6 +67,7 @@ for label in os.listdir(labels):
     serie = label.split("_")[2]
     txt = label.split("Image")[1]
     txt = txt.split(".")[0]
+    
     try:
         y[dic[serie+txt]][1] = 1
         im_title = "_resize_Serie_" +serie+ "_ImageCorr"+txt+".png"
