@@ -104,7 +104,7 @@ class CustomImageDataset2(Dataset):
         
             
         mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
-        iscrowd = np.zeros((num_labels,))
+        iscrowd = []
         
         masks = np.zeros((mask.shape[0],mask.shape[1]))
         labels = []
@@ -112,8 +112,12 @@ class CustomImageDataset2(Dataset):
         
         for i in range(num_labels):
             mask1 = mask[:,:,i]
-            if not(mask1==i+1).any() or sum(sum(mask1))/(i+1) < 200:
+            if not(mask1==i+1).any():
                 continue
+            if sum(sum(mask1))/(i+1) < 200:
+                iscrowd.append(1)
+            else:
+                iscrowd.append(0)
             
             ID = temp_label[i][0][0]
             if ID == 'Crack A':
@@ -146,6 +150,9 @@ class CustomImageDataset2(Dataset):
         
         if len(labels)<1:
             labels = [0]
+            n,m = np.shape(img)
+            boxes.append([0,0,m,n])
+            area = [n*m]
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -153,10 +160,8 @@ class CustomImageDataset2(Dataset):
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
         image_id = torch.tensor([idx])
-        if len(boxes) > 0:
-            area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        else:
-            area = []
+
+        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         
         area = torch.as_tensor(area,dtype=torch.int64)
         iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
