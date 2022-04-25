@@ -74,7 +74,7 @@ class CustomImageDataset2(Dataset):
         
         for i in range(num_labels):
             mask1 = mask[:,:,i]
-            if not(mask1==i+1).any() or sum(sum(mask1/(i+1))) < 100:
+            if not(mask1==i+1).any() or sum(sum(mask1))/(i+1) < 200:
                 continue
             
             ID = temp_label[i][0][0]
@@ -115,7 +115,10 @@ class CustomImageDataset2(Dataset):
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
         image_id = torch.tensor([idx])
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+        if len(boxes) > 0:
+            area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+        else:
+            area = []
         iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
 
         target = {}
@@ -168,10 +171,10 @@ for i, data in enumerate(data_loader):
     plt.imshow(im1, cmap = "gray")
     
     for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
-        plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i])    
-        plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i])
-        plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])
-        plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
+        plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i%8])    
+        plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i%8])
+        plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i%8])
+        plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i%8])
     
     plt.subplot(1, 2, 2)
     plt.imshow(target1["masks"])
@@ -190,40 +193,43 @@ for i, data in enumerate(data_loader):
 N_im = 400
 
 
-idx = 29
+idx = 871
 
 # load images and masks
-#img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
-#mask_path = os.listdir(direc+series+"MaskGT")[idx]
+img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
+mask_path = os.listdir(direc+series+"MaskGT")[idx]
 
-img_path = 'Serie_1_ImageCorr_-19_4101_Cell_Row4_Col_2.png'
-mask_path = 'GT_Serie_1_Image_-19_4101_Cell_Row4_Col_2.mat'
+#img_path = 'Serie_1_ImageCorr_-19_4101_Cell_Row4_Col_2.png'
+#mask_path = 'GT_Serie_1_Image_-19_4101_Cell_Row4_Col_2.mat'
 
 img = mpimg.imread(direc+series+r"CellsCorr_faulty\\"+img_path)
 # note that we haven't converted the mask to RGB,
 # because each color corresponds to a different instance
 # with 0 being background
 mask = loadmat(direc+series+r"MaskGT\\"+mask_path)
-temp_label = mask['GTLabel']  
-print(len(temp_label))           
+temp_label = mask['GTLabel']             
 mask = mask['GTMask']
 
 num_labels = len(temp_label)
-"""
+
 try:
     num_objs = mask.shape[2]
 except IndexError:
     num_objs = 1
-"""
+
     
 mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
 iscrowd = np.zeros((num_labels,))
 
-masks = np.zeros((N_im,N_im))
+masks = np.zeros((mask.shape[0],mask.shape[1]))
 labels = []
-boxes = []
+boxes = []        
+
 for i in range(num_labels):
-    ## labels
+    mask1 = mask[:,:,i]
+    if not(mask1==i+1).any(): #or sum(sum(mask1))/(i+1) < 200:
+        continue
+    
     ID = temp_label[i][0][0]
     if ID == 'Crack A':
         labels.append(1)
@@ -233,47 +239,46 @@ for i in range(num_labels):
         labels.append(3)
     if ID == 'Finger Failure':
         labels.append(4)
-if len(labels)<1:
-    labels = [0]
-
-
-k = 0
-for i in range(num_labels):
-    mask1 = mask[:,:,i]
-
-    k += 1
         
     #resize mask
-    mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
-    mask1[mask1 > 0] = 1
-    
-    if not(mask1==1).any():
-        continue    
-
-    masks[mask1 > 0] = k+1
+    #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
+    #mask1[mask1 > 0.5] = 1
+    #masks[mask1 > 0.5] = k+1
 
 # get bounding box coordinates for each mask
-    pos = np.where(mask1==1)
+    pos = np.where(mask1==i+1)
+    masks[pos] = i+1
+    
     xmin = np.min(pos[1])
     xmax = np.max(pos[1])
     ymin = np.min(pos[0])
     ymax = np.max(pos[0])
+    if xmin == xmax:
+        xmax += 1
+    if ymin == ymax:
+        ymax += 1
     boxes.append([xmin, ymin, xmax, ymax])
 
-
+if len(labels)<1:
+    labels = [0]
 
 # convert everything into a torch.Tensor
 boxes = torch.as_tensor(boxes, dtype=torch.float32)
 labels = torch.as_tensor(labels, dtype=torch.int64)
 masks = torch.as_tensor(masks, dtype=torch.uint8)
 
-area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+image_id = torch.tensor([idx])
+if len(boxes) > 0:
+    area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+else:
+    area = []
 iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
 
 target = {}
 target["boxes"] = boxes
 target["labels"] = labels
 target["masks"] = masks
+target["image_id"] = image_id
 target["area"] = area
 target["iscrowd"] = iscrowd
 
@@ -282,7 +287,7 @@ print(len(target1["labels"]),len(target1["boxes"]))
 plt.subplot(1, 2, 1)
 plt.imshow(img, cmap = "gray")
 
-for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
+for i,box in enumerate(target["boxes"]):#[xmin, ymin, xmax, ymax]
     plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i])    
     plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i])
     plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])

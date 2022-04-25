@@ -81,7 +81,9 @@ class CustomImageDataset2(Dataset):
         self.masks = list(sorted(os.listdir(os.path.join(root, "MaskGT"))))
 
     def __getitem__(self, idx):
-                
+        
+        #N_im = 400
+        
         # load images and masks
         img_path = os.path.join(self.root, "CellsCorr_faulty", self.imgs[idx])
         mask_path = os.path.join(self.root, "MaskGT", self.masks[idx])
@@ -94,40 +96,25 @@ class CustomImageDataset2(Dataset):
         mask = mask['GTMask']
         
         num_labels = len(temp_label)
+        
         try:
             num_objs = mask.shape[2]
         except IndexError:
             num_objs = 1
+        
             
-        mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_objs))
+        mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
         iscrowd = np.zeros((num_labels,))
         
-        masks = np.zeros((mask.shape[0],mask.shape[1],1))
+        masks = np.zeros((mask.shape[0],mask.shape[1]))
         labels = []
-        boxes = []
-        """
+        boxes = []        
+        
         for i in range(num_labels):
-            ## labels
-            ID = temp_label[i][0][0]
-            if ID == 'Crack A':
-                labels.append(1)
-            if ID == 'Crack B':
-                labels.append(2)
-            if ID == 'Crack C':
-                labels.append(3)
-            if ID == 'Finger Failure':
-                labels.append(4)
-        if len(labels)<1:
-            labels = [0]"""
-        
-        
-        k = 0
-        for i in range(num_objs):
             mask1 = mask[:,:,i]
-            if not(mask1 == i+1).any() or sum(sum(mask1/(i+1))) < 100:
+            if not(mask1==i+1).any() or sum(sum(mask1))/(i+1) < 200:
                 continue
             
-            ## labels
             ID = temp_label[i][0][0]
             if ID == 'Crack A':
                 labels.append(1)
@@ -137,8 +124,6 @@ class CustomImageDataset2(Dataset):
                 labels.append(3)
             if ID == 'Finger Failure':
                 labels.append(4)
-
-            k += 1
                 
             #resize mask
             #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
@@ -146,7 +131,7 @@ class CustomImageDataset2(Dataset):
             #masks[mask1 > 0.5] = k+1
 
         # get bounding box coordinates for each mask
-            pos = np.where(mask1 == i+1)
+            pos = np.where(mask1==i+1)
             masks[pos] = i+1
             
             xmin = np.min(pos[1])
@@ -157,9 +142,8 @@ class CustomImageDataset2(Dataset):
                 xmax += 1
             if ymin == ymax:
                 ymax += 1
-            
             boxes.append([xmin, ymin, xmax, ymax])
-            
+        
         if len(labels)<1:
             labels = [0]
 
@@ -169,7 +153,10 @@ class CustomImageDataset2(Dataset):
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
         image_id = torch.tensor([idx])
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+        if len(boxes) > 0:
+            area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+        else:
+            area = []
         iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
 
         target = {}
