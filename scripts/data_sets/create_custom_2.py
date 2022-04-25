@@ -143,14 +143,17 @@ def collate_fn(batch):
         data_list.append(_data)
         label_list.append(_label)
     return data_list,label_list
-"""   
+"""  
+def collate_fn(batch):
+    return tuple(zip(*batch))
+ 
 #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 dataset = CustomImageDataset2(direc + series)
 
 import utils
 
 data_loader = torch.utils.data.DataLoader(
- dataset, batch_size=8, shuffle=True, num_workers=0,collate_fn = utils.collate_fn)
+ dataset, batch_size=8, shuffle=True, num_workers=0,collate_fn = collate_fn)
 
 
 #%%
