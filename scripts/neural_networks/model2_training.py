@@ -124,7 +124,7 @@ class CustomImageDataset2(Dataset):
         k = 0
         for i in range(num_objs):
             mask1 = mask[:,:,i]
-            if not(mask1 == i+1).any():
+            if not(mask1 == i+1).any() or sum(sum(mask1/(i+1))) < 100:
                 continue
             
             ## labels

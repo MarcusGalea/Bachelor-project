@@ -28,8 +28,8 @@ from skimage.transform import resize
 import utils
 
 #%%
-direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\data\\"
+#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 global mask1
@@ -72,10 +72,9 @@ class CustomImageDataset2(Dataset):
         labels = []
         boxes = []        
         
-        k = 0
         for i in range(num_labels):
             mask1 = mask[:,:,i]
-            if not(mask1==i+1).any():
+            if not(mask1==i+1).any() or sum(sum(mask1/(i+1))) < 100:
                 continue
             
             ID = temp_label[i][0][0]
@@ -87,8 +86,6 @@ class CustomImageDataset2(Dataset):
                 labels.append(3)
             if ID == 'Finger Failure':
                 labels.append(4)
-
-            k += 1
                 
             #resize mask
             #mask1 = resize(mask1,(N_im,N_im),anti_aliasing=True)
@@ -167,6 +164,7 @@ for i, data in enumerate(data_loader):
     target1 = target[0]
     print(len(target1["labels"]),len(target1["boxes"]))
     
+    plt.subplot(1, 2, 1)
     plt.imshow(im1, cmap = "gray")
     
     for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
@@ -175,6 +173,15 @@ for i, data in enumerate(data_loader):
         plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])
         plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
     
+    plt.subplot(1, 2, 2)
+    plt.imshow(target1["masks"])
+    plt.show()
+    print(target1["labels"])
+    idx = target1["image_id"]
+    img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
+    mask_path = os.listdir(direc+series+"MaskGT")[idx]
+    print(img_path)
+    print(mask_path)
     break
     #print(i/N*100)
 
@@ -183,12 +190,16 @@ for i, data in enumerate(data_loader):
 N_im = 400
 
 
-idx = 2
+idx = 29
 
 # load images and masks
-img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
-mask_path = os.listdir(direc+series+"MaskGT")[idx]
-img = mpimg.imread(direc+series+r"CellsCorr_faulty\\"+img_path)[:,:,0]
+#img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
+#mask_path = os.listdir(direc+series+"MaskGT")[idx]
+
+img_path = 'Serie_1_ImageCorr_-19_4101_Cell_Row4_Col_2.png'
+mask_path = 'GT_Serie_1_Image_-19_4101_Cell_Row4_Col_2.mat'
+
+img = mpimg.imread(direc+series+r"CellsCorr_faulty\\"+img_path)
 # note that we haven't converted the mask to RGB,
 # because each color corresponds to a different instance
 # with 0 being background
@@ -265,3 +276,56 @@ target["labels"] = labels
 target["masks"] = masks
 target["area"] = area
 target["iscrowd"] = iscrowd
+
+print(len(target1["labels"]),len(target1["boxes"]))
+
+plt.subplot(1, 2, 1)
+plt.imshow(img, cmap = "gray")
+
+for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
+    plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i])    
+    plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i])
+    plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i])
+    plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
+
+plt.subplot(1, 2, 2)
+plt.imshow(target1["masks"])
+plt.show()
+print(target1["labels"])
+idx = target1["image_id"]
+print(img_path)
+print(mask_path)
+
+#%%
+import cv2
+
+# Read the original image
+img = cv2.imread(direc+series+r"CellsCorr_faulty\\"+img_path) 
+# Display original image
+cv2.imshow('Original', img)
+cv2.waitKey(0)
+
+# Convert to graycsale
+img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# Blur the image for better edge detection
+img_blur = cv2.GaussianBlur(img_gray, (3,3), 0) 
+
+# Sobel Edge Detection'
+sobelx = cv2.Sobel(src=img_blur, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=5) # Sobel Edge Detection on the X axis
+sobely = cv2.Sobel(src=img_blur, ddepth=cv2.CV_64F, dx=0, dy=1, ksize=5) # Sobel Edge Detection on the Y axis
+sobelxy = cv2.Sobel(src=img_blur, ddepth=cv2.CV_64F, dx=1, dy=1, ksize=5) # Combined X and Y Sobel Edge Detection
+# Display Sobel Edge Detection Images
+cv2.imshow('Sobel X', sobelx)
+cv2.waitKey(0)
+cv2.imshow('Sobel Y', sobely)
+cv2.waitKey(0)
+cv2.imshow('Sobel X Y using Sobel() function', sobelxy)
+cv2.waitKey(0)
+
+# Canny Edge Detection
+edges = cv2.Canny(image=img_blur, threshold1=10, threshold2=200) # Canny Edge Detection
+# Display Canny Edge Detection Image
+cv2.imshow('Canny Edge Detection', edges)
+cv2.waitKey(0)
+
+cv2.destroyAllWindows()
