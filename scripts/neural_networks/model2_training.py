@@ -267,7 +267,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_8.pt"
+    PATH = "NN_2_9.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
