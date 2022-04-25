@@ -119,6 +119,8 @@ class CustomImageDataset2(Dataset):
             area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         else:
             area = []
+        
+        area = torch.as_tensor(area,dtype=torch.int64)
         iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
 
         target = {}
