@@ -208,8 +208,8 @@ backbone.out_channels = 1280
 # ratios. We have a Tuple[Tuple[int]] because each feature
 # map could potentially have different sizes and
 # aspect ratios
-anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
-                                   aspect_ratios=((0.5, 1.0, 2.0),))
+anchor_generator = AnchorGenerator(sizes=((16, 32, 64, 128, 256),),
+                                   aspect_ratios=((0.1, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0),))
 
 # let's define what are the feature maps that we will
 # use to perform the region of interest cropping, as well as
@@ -306,7 +306,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_10.pt"
+    PATH = "NN_2_11.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")

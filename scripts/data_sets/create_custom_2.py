@@ -28,8 +28,8 @@ from skimage.transform import resize
 import utils
 
 #%%
-#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 global mask1
@@ -177,6 +177,10 @@ for i, data in enumerate(data_loader):
         plt.plot([box[0],box[2]],[box[3],box[3]],linewidth = 3,c = colors[i%8])
         plt.plot([box[0],box[0]],[box[1],box[3]],linewidth = 3,c = colors[i%8])
         plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i%8])
+        print("box" + str(i))
+        print("width:",box[2]-box[0])
+        print("height:",box[3]-box[1])
+        print("label:",target1["labels"][i])
     
     plt.subplot(1, 2, 2)
     plt.imshow(target1["masks"])
