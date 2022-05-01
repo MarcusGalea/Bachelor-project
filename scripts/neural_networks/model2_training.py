@@ -296,7 +296,7 @@ def main():
                                                    gamma=0.1)
 
     # let's train it for 10 epochs
-    num_epochs = 10
+    num_epochs = 100
 
     for epoch in range(num_epochs):
         # train for one epoch, printing every 10 iterations
@@ -306,7 +306,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_11.pt"
+    PATH = "NN_2_12.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
