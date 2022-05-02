@@ -194,7 +194,7 @@ import transforms as T
 import torchvision
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator
-
+"""
 # load a pre-trained model for classification and return
 # only the features
 #backbone = torchvision.models.mobilenet_v2(pretrained=True).features
@@ -228,8 +228,9 @@ model = FasterRCNN(backbone,
                    num_classes=5,
                    rpn_anchor_generator=anchor_generator,
                    box_roi_pool=roi_pooler)
-#mask R-CNN
 """
+#mask R-CNN
+
 def get_model_instance_segmentation(num_classes):
     # load an instance segmentation model pre-trained on COCO
     #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
@@ -241,12 +242,12 @@ def get_model_instance_segmentation(num_classes):
 
     # now get the number of input features for the mask classifier
     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    hidden_layer = 64#256
+    hidden_layer = 256
     # and replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
 
     return model
-"""
+
 def get_transform(train):
     transforms = []
     transforms.append(T.ToTensor())
@@ -307,7 +308,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_12.pt"
+    PATH = "NN_2_15.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
