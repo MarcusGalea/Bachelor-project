@@ -284,7 +284,7 @@ def main():
     # get the model using our helper function
     #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, num_classes = num_classes)
     #model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=False,num_classes = num_classes)
-    #model = get_model_instance_segmentation(num_classes)
+    model = get_model_instance_segmentation(num_classes)
     
     # move model to the right device
     model.to(device)
