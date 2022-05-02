@@ -38,13 +38,13 @@ defect = r"All Defects\\"
 
 class Net(nn.Module):
     def __init__(self,
-                 kernw = 50, #width/height of convolution
+                 kernw = 70, #width/height of convolution
                  kernlayers = 10, #number number of layers in first convolution (twice as many in second convolution)
-                 l1 = 64, #number of outputs in first linear transformation
-                 l2 = 32, #number of outputs in second linear transformation
+                 l1 = 100, #number of outputs in first linear transformation
+                 l2 = 50, #number of outputs in second linear transformation
                  weights = None,
                  biases = None,
-                 imagew = 400, #width/height of input image
+                 imagew = 300, #width/height of input image
                  ):
         super().__init__()
         self.conv1 = nn.Conv2d(1, kernlayers, kernw) #third arg: remove n-1 from img dim

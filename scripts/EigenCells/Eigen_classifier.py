@@ -21,7 +21,7 @@ pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
-from data_sets.create_custom_1 import test_loader
+from neural_networks.create_custom_1 import test_loader
 
 #%%
 
@@ -62,7 +62,7 @@ if test:
 #%% Classifier type 1
 N_samples = 100
 N_classes = 4
-N_PCs = 100
+N_PCs = 1
 distances = np.zeros((N_classes,N_samples,N_classes))
 PC1_direction = np.zeros((N_classes,N_samples,N_classes))
 PC2_direction = np.zeros((N_classes,N_samples,N_classes))
@@ -116,17 +116,18 @@ def plot_points(Crack_1 = 2, Crack_2 = 3, N_samples = 20, method = distances):
     plt.plot(method[Crack_2,:,Crack_1],method[Crack_2,:,Crack_2],'*',label = defects[Crack_2])
     plt.xlabel(defects[Crack_1])
     plt.ylabel(defects[Crack_2])
+    plt.title(str(method))
     plt.legend()
     
-Crack_1 = 0
+Crack_1 = 2
 Crack_2 = 3
 plot_points(Crack_1,Crack_2,N_samples,distances)
 
 
 #%%
 
-Crack_1 = 1
-Crack_2 = 3
+Crack_1 = 0
+Crack_2 = 1
 plot_points(Crack_1,Crack_2,N_samples,PC1_direction)
 
 #%%

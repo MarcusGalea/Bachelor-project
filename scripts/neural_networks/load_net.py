@@ -27,7 +27,6 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from torchvision.io import read_image
 
-#%%
 PATH = "NN_1_5.pt"
 
 if device == "cuda:0":
@@ -101,8 +100,6 @@ k = 0
 alpha = 0.1
 ncal = 20
 score = torch.tensor([])
-alphas = np.arange(0,1,0.01)
-n = len(alphas)
 qhat = np.zeros(n)
 
 
@@ -118,7 +115,7 @@ with torch.no_grad():
             labels = labels.type(torch.cuda.LongTensor)  
         outputs = net(images)
         _, predictions = torch.max(outputs, 1)
-        for label, prediction in zip(range(8),labels,predictions):
+        for label, prediction in zip(labels,predictions):
             
             # C
             if label == 1 and prediction == 1:
@@ -129,13 +126,15 @@ with torch.no_grad():
                 C[1,0] += 1
             if label == 0 and prediction == 0:
                 C[1,1] += 1
-
+            print(C)
         
 #%% Conformal prediction
 alpha = 0.05
 ncal = 34
 #score = torch.tensor([])
 alphas = np.arange(0,1,0.01)
+n = len(alphas)
+score = torch.tensor([])
 qhat = np.zeros(n)
 
 nN = 0
@@ -150,9 +149,6 @@ with torch.no_grad():
     for i,data in enumerate(test_loader):
         print("iter", i)
 
-        if i < ncal: #if score is initialized
-            continue
-
         images, labels = data #range(0,250)
         images -= avg_im #range(-250,250)
         images /= 255 #range(-1,1)
@@ -164,7 +160,6 @@ with torch.no_grad():
         outputs = net(images)
         _, predictions = torch.max(outputs, 1)
         if i < ncal:
-            #conf = torch.sigmoid(outputs)
             score = torch.cat((score,outputs[np.arange(8),labels]))
         else:
             if i == ncal:
@@ -229,3 +224,5 @@ plt.ylabel("Frequency")
 plt.legend(["TP","FN",r"\alpha = 0.05"])
 tikz.save("Defect_CP.tex")
 plt.show()
+
+#%%
