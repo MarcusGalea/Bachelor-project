@@ -198,7 +198,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 # load a pre-trained model for classification and return
 # only the features
 #backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-backbone = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True, num_classes = num_classes).features
+backbone = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True, num_classes = 5).features
 # FasterRCNN needs to know the number of
 # output channels in a backbone. For mobilenet_v2, it's 1280
 # so we need to add it here
