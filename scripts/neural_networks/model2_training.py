@@ -197,11 +197,11 @@ from torchvision.models.detection.rpn import AnchorGenerator
 
 # load a pre-trained model for classification and return
 # only the features
-backbone = torchvision.models.mobilenet_v2(pretrained=True).features
+backbone = torchvision.models.resnet18(pretrained=True).features
 # FasterRCNN needs to know the number of
 # output channels in a backbone. For mobilenet_v2, it's 1280
 # so we need to add it here
-backbone.out_channels = 1280
+backbone.out_channels = 512
 
 # let's make the RPN generate 5 x 3 anchors per spatial
 # location, with 5 different sizes and 3 different aspect
@@ -306,7 +306,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_12.pt"
+    PATH = "NN_2_14.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
