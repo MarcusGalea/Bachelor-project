@@ -49,11 +49,11 @@ global labels
 global images
 global avg_im
 
-user = "HPC"
+user = "Aleksander"
 if user == "Aleksander":
-    direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+    direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\AllSeries\\"
     series = r"AllSeries\\"
-    images = r"CellsCorr_resize300\\"
+    images = r"CellsCorr\\"
     labels = r"all_labels.csv"
     
     
@@ -248,14 +248,15 @@ def get_model_instance_segmentation(num_classes):
 
     return model
 
-import transforms as T 
+#import transforms as T 
 def get_transform(train):
     transforms = []
-    transforms.append(T.ToTensor())
+    #transforms.append(T.ToTensor())
     if train:
-        transforms.append(T.RandomHorizontalFlip(0.5))
+        0
+        #transforms.append(T.RandomHorizontalFlip(0.5))
         #transforms.append(transforms.RandomVerticalFlip(0.5))
-    return T.Compose(transforms)
+    return 0#T.Compose(transforms)
 
 def collate_fn(batch):
     return tuple(zip(*batch))
@@ -268,7 +269,7 @@ def main():
     num_classes = 5
     # use our dataset and defined transformations
     #dataset = CustomImageDataset2(direc, get_transform(train=False))
-    dataset_test = CustomImageDataset2(direc, get_transform(train=False))
+    dataset_test = CustomImageDataset2(direc)#, get_transform(train=False))
 
     # split the dataset in train and test set
     torch.manual_seed(0)
@@ -284,7 +285,7 @@ def main():
     """
     
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1, shuffle=False, num_workers=1,
+        dataset_test, batch_size=2, shuffle=False, num_workers=0,
         collate_fn=collate_fn)
 
     # get the model using our helper function
@@ -298,12 +299,18 @@ def main():
 
 
         
-    PATH = "NN_2_15.pt"
-    torch.load(model.state_dict(), PATH)
-    print("Finished Training")
+    PATH = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\\NN_2_15.pt"
+    #torch.load(model.state_dict(), PATH)
     
     # evaluate on the test dataset
     #evaluate(model, data_loader_test, device=device)
-    return model
+    return model, data_loader_test
     
-model = main()
+model, data_loader_test = main()
+
+#%%
+images,targets = next(iter(data_loader_test))
+images = list(image for image in images)
+images = torch.tensor(images)
+targets = [{k: v for k, v in t.items()} for t in targets]
+output = model(images,targets)
