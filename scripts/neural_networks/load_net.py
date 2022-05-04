@@ -9,14 +9,19 @@ import os
 from pathlib import Path
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
+os.chdir(dname)
 
 pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
-os.chdir(parent_folder)
+
+
+
+
+PATH = str(parent_folder) + "\\NN_1_5.pt"
 
 #get dataloader
-from neural_networks.create_custom_1 import data, test_loader, train_loader
-from neural_networks.NN import *
+from create_custom_1 import data, test_loader, train_loader
+from NN import net
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -27,14 +32,13 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from torchvision.io import read_image
 
-PATH = "NN_1_5.pt"
-
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
 elif device == "cpu":
     net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
-
 net.eval()
+
+
 #%% Testing accuracy
 correct = 0
 total = 0
@@ -100,7 +104,6 @@ k = 0
 alpha = 0.1
 ncal = 20
 score = torch.tensor([])
-qhat = np.zeros(n)
 
 
 with torch.no_grad():

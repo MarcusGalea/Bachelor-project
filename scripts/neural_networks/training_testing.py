@@ -14,7 +14,7 @@ dname = os.path.dirname(abspath)
 #parent_folder = pathname.parent.absolute()
 os.chdir(dname)
 from NN import *
-
+from create_custom_1 import *
 
 #%% Training
 
@@ -58,7 +58,7 @@ for epoch in range(10):  # loop over the dataset multiple times
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_6.pt"
+PATH = "NN_1_14.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(dname + "loss_1_6.csv",header = None, index = None)
+pd.DataFrame(table).to_csv(dname + "loss_1_14.csv",header = None, index = None)
 

@@ -16,10 +16,8 @@ os.chdir(dname)
 #os.chdir(parent_folder)
 
 #get dataloader
-from create_custom_1 import train_loader,test_loader
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 import numpy as np
