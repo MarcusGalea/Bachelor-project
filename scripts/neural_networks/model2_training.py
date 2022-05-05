@@ -30,6 +30,7 @@ import os
 from pathlib import Path
 import matplotlib.image as mpimg
 from scipy.io import loadmat
+from PIL import Image
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 #os.chdir(dname)
@@ -86,12 +87,8 @@ class CustomImageDataset2(Dataset):
         # load images and masks
         img_path = os.path.join(self.root, "CellsCorr_faulty", self.imgs[idx])
         mask_path = os.path.join(self.root, "MaskGT", self.masks[idx])
-        img = mpimg.imread(img_path)
-        img /= 255 #range(-1,1)
-        img += 1 #range(0,2)
-        img /= 2 #range(0,1)
-        
-        
+        img = Image.open(img_path).convert("RGB")
+                
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
         # with 0 being background
@@ -107,15 +104,15 @@ class CustomImageDataset2(Dataset):
             num_objs = 1
         
             
-        mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
+        mask = np.reshape(mask,(num_labels,mask.shape[0],mask.shape[1]))
         iscrowd = []
         
-        masks = np.zeros((mask.shape[0],mask.shape[1],1))
+        masks = np.zeros((num_labels,mask.shape[0],mask.shape[1]))
         labels = []
         boxes = []        
         
         for i in range(num_labels):
-            mask1 = mask[:,:,i]
+            mask1 = mask[i,:,:]
             if not(mask1==i+1).any():
                 continue
             if sum(sum(mask1))/(i+1) < 200:
@@ -140,7 +137,7 @@ class CustomImageDataset2(Dataset):
 
         # get bounding box coordinates for each mask
             pos = np.where(mask1==i+1)
-            masks[pos] = 1
+            masks[i,pos] = 1
             
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
@@ -199,41 +196,7 @@ import transforms as T
 import torchvision
 from torchvision.models.detection import FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator
-"""
-# load a pre-trained model for classification and return
-# only the features
-#backbone = torchvision.models.mobilenet_v2(pretrained=True).features
-backbone = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, num_classes = 5).features
-# FasterRCNN needs to know the number of
-# output channels in a backbone. For mobilenet_v2, it's 1280
-# so we need to add it here
-backbone.out_channels = 1
 
-# let's make the RPN generate 5 x 3 anchors per spatial
-# location, with 5 different sizes and 3 different aspect
-# ratios. We have a Tuple[Tuple[int]] because each feature
-# map could potentially have different sizes and
-# aspect ratios
-anchor_generator = AnchorGenerator(sizes=((16, 64, 256),),
-                                   aspect_ratios=((0.1, 1.0, 3.0, 6.0),))
-
-# let's define what are the feature maps that we will
-# use to perform the region of interest cropping, as well as
-# the size of the crop after rescaling.
-# if your backbone returns a Tensor, featmap_names is expected to
-# be [0]. More generally, the backbone should return an
-# OrderedDict[Tensor], and in featmap_names you can choose which
-# feature maps to use.
-roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=['0'],
-                                                output_size=7,
-                                                sampling_ratio=2)
-
-# put the pieces together inside a FasterRCNN model
-model = FasterRCNN(backbone,
-                   num_classes=5,
-                   rpn_anchor_generator=anchor_generator,
-                   box_roi_pool=roi_pooler)
-"""
 #mask R-CNN
 
 def get_model_instance_segmentation(num_classes):
@@ -247,10 +210,12 @@ def get_model_instance_segmentation(num_classes):
 
     # now get the number of input features for the mask classifier
     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    hidden_layer = 64#256
+    hidden_layer = 256
     # and replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
     
+    # define anchor generator
+    """
     anchor_generator = AnchorGenerator(
                         #sizes = ((16,64,256),),
                         #aspect_ratios = ((0.1,1.0,3.0,6.0),))
@@ -258,7 +223,7 @@ def get_model_instance_segmentation(num_classes):
                         aspect_ratios=(tuple([(0.1, 1.0, 3.0, 6.0) for _ in range(5)])))
     model.rpn.anchor_generator = anchor_generator
     model.rpn.head = RPNHead(256,anchor_generator.num_anchors_per_location()[0])
-
+    """
     return model
 
 def get_transform(train):
@@ -266,7 +231,6 @@ def get_transform(train):
     transforms.append(T.ToTensor())
     if train:
         transforms.append(T.RandomHorizontalFlip(0.5))
-        #transforms.append(transforms.RandomVerticalFlip(0.5))
     return T.Compose(transforms)
 
 def main():
@@ -295,8 +259,6 @@ def main():
         collate_fn=utils.collate_fn)
 
     # get the model using our helper function
-    #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, num_classes = num_classes)
-    #model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=False,num_classes = num_classes)
     model = get_model_instance_segmentation(num_classes)
     
     # move model to the right device
@@ -321,7 +283,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_3_2.pt"
+    PATH = "NN_3_1.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
