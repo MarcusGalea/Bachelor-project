@@ -187,6 +187,7 @@ from engine import train_one_epoch, evaluate
 import utils
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+from torchvision.models.detection.rpn import RPNHead
 
 import transforms as T
 
@@ -245,6 +246,12 @@ def get_model_instance_segmentation(num_classes):
     hidden_layer = 256
     # and replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
+    
+    anchor_generator = AnchorGenerator(
+                        sizes=tuple([(16, 64, 256) for _ in range(5)]),
+                        aspect_ratios=([(0.1, 1.0, 3.0, 6.0) for _ in range(5)]))
+    model.rpn.anchor_generator = anchor_generator
+    model.rpn.head = RPNHead(256,anchor_generator.num_anchors_per_location)
 
     return model
 
@@ -308,7 +315,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_2_15.pt"
+    PATH = "NN_3_1.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
