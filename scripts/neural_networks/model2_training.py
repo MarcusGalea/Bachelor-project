@@ -253,7 +253,7 @@ def get_model_instance_segmentation(num_classes):
                         #sizes=(tuple([(16, 64, 256) for _ in range(5)])),
                         #aspect_ratios=(tuple([(0.1, 1.0, 3.0, 6.0) for _ in range(5)])))
     model.rpn.anchor_generator = anchor_generator
-    model.rpn.head = RPNHead(256,anchor_generator.num_anchors_per_location)
+    model.rpn.head = RPNHead(256,anchor_generator.num_anchors_per_location()[0])
 
     return model
 
