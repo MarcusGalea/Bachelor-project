@@ -243,7 +243,7 @@ def get_model_instance_segmentation(num_classes):
 
     # now get the number of input features for the mask classifier
     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    hidden_layer = 256
+    hidden_layer = 64#256
     # and replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
     
@@ -317,7 +317,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_3_1.pt"
+    PATH = "NN_3_2.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
