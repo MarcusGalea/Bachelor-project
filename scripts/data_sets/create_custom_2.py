@@ -69,8 +69,8 @@ class CustomImageDataset2(Dataset):
         masks = np.reshape(masks,(num_labels,masks.shape[0],masks.shape[1]))
         iscrowd = []
         
-        idx = np.where(masks > 0.5)
-        masks[idx] = 1
+        position = np.where(masks > 0.5)
+        masks[position] = 1
         labels = []
         boxes = []        
         
@@ -167,6 +167,7 @@ for i, data in enumerate(data_loader):
     print(len(target1["labels"]),len(target1["boxes"]))
     
     plt.subplot(1, 2, 1)
+    
     plt.imshow(im1, cmap = "gray")
     
     for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
@@ -180,14 +181,10 @@ for i, data in enumerate(data_loader):
         print("label:",target1["labels"][i])
     
     plt.subplot(1, 2, 2)
-    plt.imshow(target1["masks"])
+    plt.imshow(target1["masks"][0])
     plt.show()
     print(target1["labels"])
     idx = target1["image_id"]
-    img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
-    mask_path = os.listdir(direc+series+"MaskGT")[idx]
-    print(img_path)
-    print(mask_path)
     break
     #print(i/N*100)
 

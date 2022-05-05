@@ -107,8 +107,8 @@ class CustomImageDataset2(Dataset):
         masks = np.reshape(masks,(num_labels,masks.shape[0],masks.shape[1]))
         iscrowd = []
         
-        idx = np.where(masks > 0.5)
-        masks[idx] = 1
+        position = np.where(masks > 0.5)
+        masks[position] = 1
         labels = []
         boxes = []        
         
