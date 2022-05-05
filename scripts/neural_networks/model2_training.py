@@ -214,7 +214,7 @@ def get_model_instance_segmentation(num_classes):
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
     
     # define anchor generator
-    """
+    
     anchor_generator = AnchorGenerator(
                         #sizes = ((16,64,256),),
                         #aspect_ratios = ((0.1,1.0,3.0,6.0),))
@@ -222,7 +222,7 @@ def get_model_instance_segmentation(num_classes):
                         aspect_ratios=(tuple([(0.1, 1.0, 3.0, 6.0) for _ in range(5)])))
     model.rpn.anchor_generator = anchor_generator
     model.rpn.head = RPNHead(256,anchor_generator.num_anchors_per_location()[0])
-    """
+    
     return model
 
 def get_transform(train):
@@ -282,7 +282,7 @@ def main():
         # evaluate on the test dataset
         evaluate(model, data_loader_test, device=device)
         
-    PATH = "NN_3_1.pt"
+    PATH = "NN_3_2.pt"
     torch.save(model.state_dict(), PATH)
 
     print("Finished Training")
