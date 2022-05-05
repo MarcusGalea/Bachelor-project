@@ -248,8 +248,10 @@ def get_model_instance_segmentation(num_classes):
     model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features_mask,hidden_layer,num_classes)
     
     anchor_generator = AnchorGenerator(
-                        sizes=tuple([(16, 64, 256) for _ in range(5)]),
-                        aspect_ratios=([(0.1, 1.0, 3.0, 6.0) for _ in range(5)]))
+                        sizes=tuple([(16, 32, 64, 128, 256, 512) for _ in range(5)]),
+                        aspect_ratios=tuple([(0.25, 0.5, 1.0, 2.0) for _ in range(5)]))
+                        #sizes=tuple([(16, 64, 256) for _ in range(5)]),
+                        #aspect_ratios=([(0.1, 1.0, 3.0, 6.0) for _ in range(5)]))
     model.rpn.anchor_generator = anchor_generator
     model.rpn.head = RPNHead(256,anchor_generator.num_anchors_per_location)
 
