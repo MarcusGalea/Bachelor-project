@@ -157,7 +157,7 @@ def get_model_instance_segmentation(num_classes):
     return model
 
 #%%
-from torchvision import transforms as T
+import transforms as T
 
 def get_transform(train):
     transforms = []
@@ -175,22 +175,24 @@ def collate_fn(batch):
         label_list.append(_label)
     return data_list,label_list
 """
-#def collate_fn(batch):
-#    return tuple(zip(*batch))
+def collate_fn(batch):
+   return tuple(zip(*batch))
 
 #%%
 import torchvision
 import utils
 
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
-dataset = PennFudanDataset(r'C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\PennFudanPed', get_transform(train=True))
+dataset = PennFudanDataset(r'C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\PennFudanPed', transforms =None)
 data_loader = torch.utils.data.DataLoader(
- dataset, batch_size=2, shuffle=True, num_workers=4,
+ dataset, batch_size=2, shuffle=True, num_workers=0,
  collate_fn=collate_fn)
 # For Training
 images,targets = next(iter(data_loader))
 images = list(image for image in images)
 targets = [{k: v for k, v in t.items()} for t in targets]
+
+#%%
 output = model(images,targets)   # Returns losses and detections
 # For inference
 model.eval()
