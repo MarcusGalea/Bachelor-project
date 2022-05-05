@@ -17,11 +17,11 @@ parent_folder = pathname.parent.absolute()
 
 
 
-PATH = str(parent_folder) + "\\NN_1_5.pt"
+PATH = str(parent_folder) + "\\NN_1_14.pt"
 
 #get dataloader
 from create_custom_1 import data, test_loader, train_loader
-from NN import net
+from NN import net,device,Net,avg_im
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
