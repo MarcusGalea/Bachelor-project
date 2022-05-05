@@ -25,11 +25,12 @@ from pytorch_metric_learning.samplers import MPerClassSampler
 import matplotlib.image as mpimg
 from scipy.io import loadmat
 from skimage.transform import resize
+from PIL import Image
 import utils
 
 #%%
-direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 global mask1
@@ -44,38 +45,43 @@ class CustomImageDataset2(Dataset):
 
     def __getitem__(self, idx):
         
-        #N_im = 400
         
         # load images and masks
         img_path = os.path.join(self.root, "CellsCorr_faulty", self.imgs[idx])
         mask_path = os.path.join(self.root, "MaskGT", self.masks[idx])
-        img = mpimg.imread(img_path)
+        img = Image.open(img_path).convert("RGB")
+                
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
         # with 0 being background
-        mask = loadmat(mask_path)
-        temp_label = mask['GTLabel']             
-        mask = mask['GTMask']
+        masks = loadmat(mask_path)
+        temp_label = masks['GTLabel']             
+        masks = masks['GTMask']
         
         num_labels = len(temp_label)
         
         try:
-            num_objs = mask.shape[2]
+            num_objs = masks.shape[2]
         except IndexError:
             num_objs = 1
         
             
-        mask = np.reshape(mask,(mask.shape[0],mask.shape[1],num_labels))
-        iscrowd = np.zeros((num_labels,))
+        masks = np.reshape(masks,(num_labels,masks.shape[0],masks.shape[1]))
+        iscrowd = []
         
-        masks = np.zeros((mask.shape[0],mask.shape[1]))
+        idx = np.where(masks > 0.5)
+        masks[idx] = 1
         labels = []
         boxes = []        
         
         for i in range(num_labels):
-            mask1 = mask[:,:,i]
-            if not(mask1==i+1).any() or sum(sum(mask1))/(i+1) < 200:
+            mask1 = masks[i,:,:]
+            if not(mask1==1).any():
                 continue
+            if sum(sum(mask1)) < 200:
+                iscrowd.append(1)
+            else:
+                iscrowd.append(0)
             
             ID = temp_label[i][0][0]
             if ID == 'Crack A':
@@ -92,10 +98,7 @@ class CustomImageDataset2(Dataset):
             #mask1[mask1 > 0.5] = 1
             #masks[mask1 > 0.5] = k+1
 
-        # get bounding box coordinates for each mask
-            pos = np.where(mask1==i+1)
-            masks[pos] = i+1
-            
+            pos = np.where(mask1 == 1)
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])
@@ -108,6 +111,9 @@ class CustomImageDataset2(Dataset):
         
         if len(labels)<1:
             labels = [0]
+            n,m = np.shape(img)
+            boxes.append([0,0,m,n])
+            area = [n*m]
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -115,10 +121,8 @@ class CustomImageDataset2(Dataset):
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
         image_id = torch.tensor([idx])
-        if len(boxes) > 0:
-            area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        else:
-            area = []
+
+        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         
         area = torch.as_tensor(area,dtype=torch.int64)
         iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
@@ -138,14 +142,7 @@ class CustomImageDataset2(Dataset):
 
     def __len__(self):
         return len(self.imgs)
-"""    
-def collate_fn(batch):
-    data_list, label_list = [], []
-    for _data, _label in batch:
-        data_list.append(_data)
-        label_list.append(_label)
-    return data_list,label_list
-"""  
+
 def collate_fn(batch):
     return tuple(zip(*batch))
  
@@ -198,17 +195,18 @@ for i, data in enumerate(data_loader):
 
 N_im = 400
 
+from PIL import Image
 
 idx = 936
 
 # load images and masks
-img_path = os.listdir(direc+series+"CellsCorr_faulty")[idx]
+img_path = os.listdir(direc+series+"CellsCorr")[idx]
 mask_path = os.listdir(direc+series+"MaskGT")[idx]
 
 #img_path = 'Serie_1_ImageCorr_-19_4101_Cell_Row4_Col_2.png'
 #mask_path = 'GT_Serie_1_Image_-19_4101_Cell_Row4_Col_2.mat'
 
-img = mpimg.imread(direc+series+r"CellsCorr_faulty\\"+img_path)
+img = Image.open(direc+series+r"CellsCorr\\"+img_path).convert("RGB")
 # note that we haven't converted the mask to RGB,
 # because each color corresponds to a different instance
 # with 0 being background
@@ -280,6 +278,9 @@ else:
     area = []
 iscrowd = torch.as_tensor(iscrowd, dtype=torch.int64)
 
+colors = ["b","g","r","c","m","y","k","w"]
+
+
 target = {}
 target["boxes"] = boxes
 target["labels"] = labels
@@ -288,7 +289,7 @@ target["image_id"] = image_id
 target["area"] = area
 target["iscrowd"] = iscrowd
 
-print(len(target1["labels"]),len(target1["boxes"]))
+print(len(target["labels"]),len(target["boxes"]))
 
 plt.subplot(1, 2, 1)
 plt.imshow(img, cmap = "gray")
@@ -300,10 +301,10 @@ for i,box in enumerate(target["boxes"]):#[xmin, ymin, xmax, ymax]
     plt.plot([box[2],box[2]],[box[1],box[3]],linewidth = 3,c = colors[i])
 
 plt.subplot(1, 2, 2)
-plt.imshow(target1["masks"])
+plt.imshow(target["masks"])
 plt.show()
-print(target1["labels"])
-idx = target1["image_id"]
+print(target["labels"])
+idx = target["image_id"]
 print(img_path)
 print(mask_path)
 

@@ -92,33 +92,35 @@ class CustomImageDataset2(Dataset):
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
         # with 0 being background
-        mask = loadmat(mask_path)
-        temp_label = mask['GTLabel']             
-        mask = mask['GTMask']
+        masks = loadmat(mask_path)
+        temp_label = masks['GTLabel']             
+        masks = masks['GTMask']
         
         num_labels = len(temp_label)
         
         try:
-            num_objs = mask.shape[2]
+            num_objs = masks.shape[2]
         except IndexError:
             num_objs = 1
         
             
-        mask = np.reshape(mask,(num_labels,mask.shape[0],mask.shape[1]))
+        masks = np.reshape(masks,(num_labels,masks.shape[0],masks.shape[1]))
         iscrowd = []
         
-        masks = np.zeros((num_labels,mask.shape[0],mask.shape[1]))
+        idx = np.where(masks > 0.5)
+        masks[idx] = 1
         labels = []
         boxes = []        
         
         for i in range(num_labels):
-            mask1 = mask[i,:,:]
-            if not(mask1==i+1).any():
+            mask1 = masks[i,:,:]
+            if not(mask1==1).any():
                 continue
-            if sum(sum(mask1))/(i+1) < 200:
+            if sum(sum(mask1)) < 200:
                 iscrowd.append(1)
             else:
                 iscrowd.append(0)
+            
             
             ID = temp_label[i][0][0]
             if ID == 'Crack A':
@@ -135,10 +137,7 @@ class CustomImageDataset2(Dataset):
             #mask1[mask1 > 0.5] = 1
             #masks[mask1 > 0.5] = k+1
 
-        # get bounding box coordinates for each mask
-            pos = np.where(mask1==i+1)
-            masks[i,pos] = 1
-            
+            pos = np.where(mask1 == 1)
             xmin = np.min(pos[1])
             xmax = np.max(pos[1])
             ymin = np.min(pos[0])

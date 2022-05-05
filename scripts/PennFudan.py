@@ -198,3 +198,23 @@ output = model(images,targets)   # Returns losses and detections
 model.eval()
 x = [torch.rand(3, 300, 400), torch.rand(3, 500, 400)]
 predictions = model(x)           # Returns predictions
+
+
+#%%
+from PIL import Image
+import os
+
+direc = r'C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\PennFudanPed\\'
+idx = 3
+# load images and masks
+img_path = os.listdir(direc+r"PNGImages\\")[idx]
+mask_path = os.listdir(direc+r"PedMasks\\")[idx]
+
+
+#img_path = 'Serie_1_ImageCorr_-19_4101_Cell_Row4_Col_2.png'
+#mask_path = 'GT_Serie_1_Image_-19_4101_Cell_Row4_Col_2.mat'
+
+img = Image.open(direc+r"PNGImages\\"+img_path).convert("RGB")
+mask = Image.open(direc+r"PedMasks\\"+mask_path)
+mask = np.array(mask)
+print(np.unique(mask))
