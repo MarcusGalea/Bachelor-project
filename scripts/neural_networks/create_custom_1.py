@@ -29,10 +29,10 @@ if user == "HPC":
     direc = r'zhome\35\5\147366\Desktop\\'
     series = ''
     images = 'CellsCorr_resize300'
-    labels = 'labels.csv'
+    labels_dir = 'labels.csv'
 
-direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
-#direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
+#direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
+direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
 series = r"AllSeries\\"
 
 class CustomImageDataset(Dataset):
@@ -58,13 +58,13 @@ class CustomImageDataset(Dataset):
 
 
 #def load_data(data_dir= None):
-data = CustomImageDataset(annotations_file = direc+series+labels,
+data = CustomImageDataset(annotations_file = direc+series+labels_dir,
                           img_dir = direc+series+images,
                           transform = transforms.RandomVerticalFlip())
 
 
 labels = data.img_labels.to_numpy()[:,1]
-
+classes = pd.read_csv(direc+series+"labels_MC.csv").to_numpy()[:,1]
 
 
 #seed #DON'T CHANGE, otherwise test and train data will mix!!!!
@@ -90,10 +90,11 @@ train_split = Subset(data, train_indices)
 test_split = Subset(data, test_indices)
 train_labels = labels[train_indices]
 test_labels = labels[test_indices]
+test_classes = classes[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
 train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
-test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
+#test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=100000)
 
 #%% create dataloaders
 device = "cuda" if torch.cuda.is_available() else "cpu"
