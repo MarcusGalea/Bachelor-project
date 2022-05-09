@@ -15,12 +15,10 @@ pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 
 
-
-
-PATH = str(parent_folder) + "\\NN_1_14.pt"
+PATH = str(parent_folder) + "\\NN_1_5.pt"
 
 #get dataloader
-from create_custom_1 import data, test_loader, train_loader
+from create_custom_1 import data, test_loader, train_loader,direc,series,test_split,test_indices, test_classes
 from NN import net,device,Net,avg_im
 import torch
 from torch import nn
@@ -31,6 +29,7 @@ import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from torchvision.io import read_image
+import pandas as pd
 
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
@@ -42,6 +41,8 @@ net.eval()
 #%% Testing accuracy
 correct = 0
 total = 0
+
+
 # since we're not training, we don't need to calculate the gradients for our outputs
 with torch.no_grad():
     for i, data in enumerate(test_loader, 0):
@@ -104,7 +105,11 @@ k = 0
 alpha = 0.1
 ncal = 20
 score = torch.tensor([])
+classes = pd.read_csv(direc+series+"labels_MC.csv")
 
+
+Nc = [0,0,0,0]
+predc = [0,0,0,0]
 
 with torch.no_grad():
     for i,data in enumerate(test_loader):
@@ -118,8 +123,8 @@ with torch.no_grad():
             labels = labels.type(torch.cuda.LongTensor)  
         outputs = net(images)
         _, predictions = torch.max(outputs, 1)
-        for label, prediction in zip(labels,predictions):
-            
+        for j,info in enumerate(zip(labels,predictions)):
+            label, prediction = info
             # C
             if label == 1 and prediction == 1:
                 C[0,0] += 1
@@ -129,11 +134,21 @@ with torch.no_grad():
                 C[1,0] += 1
             if label == 0 and prediction == 0:
                 C[1,1] += 1
-            print(C)
-        
+            #statistics
+            MC = test_classes[i*8+j]
+            for k,c in enumerate(MC):
+                c = float(c)
+                if c == 1.0:
+                    Nc[k] += 1
+                    if int(prediction) == 1:
+                        predc[k] += 1
+            
+            print("ground truth: ", prediction)
+            print("predictions: ", MC)
+                
 #%% Conformal prediction
 alpha = 0.05
-ncal = 34
+ncal = len(test_loader)//2
 #score = torch.tensor([])
 alphas = np.arange(0,1,0.01)
 n = len(alphas)
@@ -142,11 +157,14 @@ qhat = np.zeros(n)
 
 nN = 0
 nP = 0
+nD = 0
 
 TN = np.zeros(100)
 FP = np.zeros(100)
 TP = np.zeros(100)
 FN = np.zeros(100)
+
+N_HC = np.zeros(100)
 
 with torch.no_grad():
     for i,data in enumerate(test_loader):
@@ -166,8 +184,9 @@ with torch.no_grad():
             score = torch.cat((score,outputs[np.arange(8),labels]))
         else:
             if i == ncal:
-                qhat = np.quantile(score,alphas,interpolation = "lower")
+                qhat = np.quantile(score,(ncal+1)*alphas/ncal,interpolation = "lower")
             elif i >= ncal:
+                nD += len(images)
                 nN += len(np.where(labels==0)[0])
                 nP += len(np.where(labels==1)[0])
                 for j in range(100):
@@ -177,6 +196,7 @@ with torch.no_grad():
                         CP[idx[0][k]].append(idx[1][k])
                     
                     for l,label in enumerate(labels):
+                        """
                         if label == 0:
                             if 0 in CP[l]:
                                 TN[j] += 1
@@ -187,6 +207,20 @@ with torch.no_grad():
                                 TP[j] += 1
                             if 0 in CP[l]:
                                 FN[j] += 1
+                            """
+                        if len(CP[l]) == 1: #high confidence
+                            N_HC[j] += 1
+                            pred = CP[l][0]
+                            
+                            if pred == label and pred == 1:
+                                TP[j] += 1
+                            elif pred != label and pred == 1:
+                                FP[j] += 1
+                            elif pred == label and pred == 0:
+                                TN[j] += 1
+                            elif pred != label and pred == 0:
+                                FN[j] += 1
+                            
                 print("no defect")
                 print("TN: ", TN[::10])
                 print("FP: ", FP[::10])
@@ -196,28 +230,38 @@ with torch.no_grad():
                 #if len(np.where(labels==1)[0]) > 0:
                  #   break
 
+"""
 TN /= nN
 FP /= nN
 TP /= nP
 FN /= nP
+N_HC /= nD
+"""
+
 
 #%% plots of conformal prediction
 import tikzplotlib as tikz
 
 
-thresh = 0.05
+#thresh = 0.05
 
-plt.plot(alphas, TN)
-plt.plot(alphas, FP)
-plt.plot(thresh*np.ones(100),np.arange(0,1,0.01))
-plt.title("Target Class: No defect")
-plt.xlabel(r'\alpha=0.05')
+HCD = (TP+TN+FP+FN)/nD
+
+TNr = TN/(FP+TN)
+TPr = TP/(TP+FN)
+
+plt.plot(alphas, TPr)
+plt.plot(alphas, TNr)
+plt.plot(alphas, HCD)
+#plt.plot(thresh*np.ones(100),np.arange(0,1,0.01))
+plt.title("High confidence set")
+plt.xlabel("alpha")
 plt.ylabel("Frequency")
-plt.legend(["TN","FP",r"\alpha"])
+plt.legend(["TP freq","TN freq","High Conf Dat "])
 tikz.save("No_defect_CP.tex")
 plt.show()
 
-
+"""
 plt.plot(alphas, TP)
 plt.plot(alphas, FN)
 plt.plot(thresh*np.ones(100),np.arange(0,1,0.01))
@@ -227,5 +271,6 @@ plt.ylabel("Frequency")
 plt.legend(["TP","FN",r"\alpha = 0.05"])
 tikz.save("Defect_CP.tex")
 plt.show()
+"""
 
 #%%

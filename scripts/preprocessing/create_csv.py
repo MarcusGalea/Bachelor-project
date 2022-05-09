@@ -34,6 +34,7 @@ faulty_images = direc + series + r"CellsCorr_faulty\\"
 labels = direc + series + r"MaskGT\\"
 
 y = []
+y2 = []
 dic = {}
 k = 0
 avg = []
@@ -49,11 +50,13 @@ for pic in os.listdir(images):
         txt = txt.split(".")[0]
         dic[serie+txt] = k
         y.append([pic,0])
+        y2.append([pic,[0,0,0,0]])
         k += 1
 
 for label in os.listdir(labels):
     GT = loadmat(labels + label)
     mask1 = GT['GTMask']
+    mat_label = GT['GTLabel']
 
     try:
         N = mask1.shape[2]
@@ -66,7 +69,6 @@ for label in os.listdir(labels):
     temp[temp > 0.5] = 1
     
     helper = False
-    
     
     serie = label.split("_")[2]
     txt = label.split("Image")[1]
@@ -85,6 +87,15 @@ for label in os.listdir(labels):
     if helper:
         try:
             y[dic[serie+txt]][1] = 1
+            for i in range(N):
+                if mat_label[i][0][0] == 'Finger Failure':
+                   y2[dic[serie+txt]][1][3]  = 1
+                if mat_label[i][0][0] == 'Crack A':
+                    y2[dic[serie+txt]][1][0] = 1
+                if mat_label[i][0][0] == 'Crack B':
+                    y2[dic[serie+txt]][1][1] = 1
+                if mat_label[i][0][0] == 'Crack C':
+                    y2[dic[serie+txt]][1][2] = 1
             shutil.copyfile(images+im_title, faulty_images+im_title)
     
         except KeyError:
@@ -105,3 +116,4 @@ for label in os.listdir(labels):
     time.sleep(2)
     """
 pd.DataFrame(y).to_csv(direc + series + "labels.csv",header = None, index = None)
+pd.DataFrame(y2).to_csv(direc + series + "labels_MC.csv",header = None, index = None)
