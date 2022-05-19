@@ -15,11 +15,11 @@ pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 
 
-PATH = str(parent_folder) + "\\NN_1_5.pt"
+PATH = str(parent_folder) + "\\NN_1_14.pt"
 
 #get dataloader
-from create_custom_1 import data, test_loader, train_loader,direc,series,test_split,test_indices, test_classes
-from NN import net,device,Net,avg_im
+from create_custom_1 import data, test_loader, train_loader,direc,series,test_split,test_indices, test_classes,test_titles,labeldf
+from NN import device,Net,avg_im
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -31,6 +31,23 @@ import matplotlib.pyplot as plt
 from torchvision.io import read_image
 import pandas as pd
 
+
+net = Net(kernw = 70,
+          kernlayers = 10,
+          l1=100,
+          l2=50,
+          imagew = 300
+          )
+
+device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda:0"
+    if torch.cuda.device_count() > 1:
+        print(device)
+        net = nn.DataParallel(net)
+
+net.to(device)
 if device == "cuda:0":
     net.load_state_dict(torch.load(PATH))
 elif device == "cpu":
@@ -47,10 +64,10 @@ total = 0
 with torch.no_grad():
     for i, data in enumerate(test_loader, 0):
         images, labels = data
-        images -= avg_im #range(-250,250)
+        #images -= avg_im #range(-250,250)
         images /= 255 #range(-1,1)
-        images += 1 #range(0,2)
-        images /= 2 #range(0,1)
+        #images += 1 #range(0,2)
+        #images /= 2 #range(0,1)
         if device == "cuda:0":
             images = images.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)
@@ -136,23 +153,37 @@ with torch.no_grad():
                 C[1,1] += 1
             #statistics
             MC = test_classes[i*8+j]
+            MC = MC.split('[')[1].split(']')[0].split(',')
+
             for k,c in enumerate(MC):
                 c = float(c)
                 if c == 1.0:
                     Nc[k] += 1
                     if int(prediction) == 1:
                         predc[k] += 1
-            
-            print("ground truth: ", prediction)
-            print("predictions: ", MC)
+            print("predictions", predc)
+            print("ground truth", Nc)
+        
+#%% statistics
+import tikzplotlib
+
+predc = np.array(predc)
+Nc = np.array(Nc)
+
+plt.bar(["Crack A"," Crack B","Crack C","Finger Failure"],predc/Nc)
+plt.ylabel("Frequency [%]")
+plt.title("Relative amount of errors caught by neural network")
+tikzplotlib.save("Statistics_1_14.tex")
+plt.show()
                 
 #%% Conformal prediction
 alpha = 0.05
 ncal = len(test_loader)//2
 #score = torch.tensor([])
-alphas = np.arange(0,1,0.01)
+alphas = torch.arange(0,1,0.01).to(device)
 n = len(alphas)
-score = torch.tensor([])
+score = torch.tensor([]).to(device)
+score,
 qhat = np.zeros(n)
 
 nN = 0
@@ -165,6 +196,7 @@ TP = np.zeros(100)
 FN = np.zeros(100)
 
 N_HC = np.zeros(100)
+low_conf = [[] for i in range(100)]
 
 with torch.no_grad():
     for i,data in enumerate(test_loader):
@@ -184,30 +216,19 @@ with torch.no_grad():
             score = torch.cat((score,outputs[np.arange(8),labels]))
         else:
             if i == ncal:
-                qhat = np.quantile(score,(ncal+1)*alphas/ncal,interpolation = "lower")
+                qhat = torch.quantile(score,(ncal+1)*alphas/ncal,interpolation = "lower")
             elif i >= ncal:
                 nD += len(images)
-                nN += len(np.where(labels==0)[0])
-                nP += len(np.where(labels==1)[0])
+                nN += len(torch.where(labels==0)[0])
+                nP += len(torch.where(labels==1)[0])
                 for j in range(100):
-                    idx = np.where(outputs > qhat[j])
+                    idx = torch.where(outputs > qhat[j])
                     CP = [[]for i in range(8)]
-                    for k in range(np.shape(idx)[1]):
+                    for k in range(np.shape(idx[1])[0]):
                         CP[idx[0][k]].append(idx[1][k])
                     
                     for l,label in enumerate(labels):
-                        """
-                        if label == 0:
-                            if 0 in CP[l]:
-                                TN[j] += 1
-                            if 1 in CP[l]:
-                                FP[j] += 1
-                        if label == 1:
-                            if 1 in CP[l]:
-                                TP[j] += 1
-                            if 0 in CP[l]:
-                                FN[j] += 1
-                            """
+
                         if len(CP[l]) == 1: #high confidence
                             N_HC[j] += 1
                             pred = CP[l][0]
@@ -220,6 +241,8 @@ with torch.no_grad():
                                 TN[j] += 1
                             elif pred != label and pred == 0:
                                 FN[j] += 1
+                        else: #low confidence
+                            low_conf[j].append(test_indices[i*8+l])
                             
                 print("no defect")
                 print("TN: ", TN[::10])
@@ -243,11 +266,13 @@ N_HC /= nD
 import tikzplotlib as tikz
 
 
-#thresh = 0.05
+#thresh = 0.050
 
+alphas = alphas.cpu()
 HCD = (TP+TN+FP+FN)/nD
 
 TNr = TN/(FP+TN)
+
 TPr = TP/(TP+FN)
 
 plt.plot(alphas, TPr)
@@ -257,8 +282,8 @@ plt.plot(alphas, HCD)
 plt.title("High confidence set")
 plt.xlabel("alpha")
 plt.ylabel("Frequency")
-plt.legend(["TP freq","TN freq","High Conf Dat "])
-tikz.save("No_defect_CP.tex")
+plt.legend(["TPR","TNR","High Conf Dat "])
+tikz.save("CP_1_14.tex")
 plt.show()
 
 """
@@ -273,4 +298,23 @@ tikz.save("Defect_CP.tex")
 plt.show()
 """
 
+#%% low conf ims
+
+from PIL import Image
+import random
+random.seed(20)
+
+i = 21
+low_conf_data = labeldf.iloc[low_conf[np.where(HCD==max(HCD))[0][0]],:]
+n =  len(low_conf_data)
+
+idx = random.sample(range(0, n-1), 4)
+lc_ims = list(low_conf_ims.iloc[idx,0])
+for i,im in enumerate(lc_ims):
+    img = Image.open(direc+series+r"\\CellsCorr_resize300\\"+im).convert("RGB")
+    plt.imshow(img)
+    plt.title(low_conf_data.iloc[idx[i],1])
+    plt.show()
+    
 #%%
+plt.imshow(net.conv1.weight[2][0].cpu().detach().numpy(), cmap= "gray")

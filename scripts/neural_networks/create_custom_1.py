@@ -56,7 +56,11 @@ class CustomImageDataset(Dataset):
         return image[0:1].type(torch.FloatTensor), label
 
 
-
+data_transform = transforms.Compose([
+        #transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+        #transforms.ToTensor(),
+    ])
 #def load_data(data_dir= None):
 data = CustomImageDataset(annotations_file = direc+series+labels_dir,
                           img_dir = direc+series+images,
@@ -65,6 +69,12 @@ data = CustomImageDataset(annotations_file = direc+series+labels_dir,
 
 labels = data.img_labels.to_numpy()[:,1]
 classes = pd.read_csv(direc+series+"labels_MC.csv").to_numpy()[:,1]
+
+
+
+labeldf = pd.read_csv(direc + series + labels_dir)
+
+titles = labeldf.iloc[:,0]
 
 
 #seed #DON'T CHANGE, otherwise test and train data will mix!!!!
@@ -91,6 +101,7 @@ test_split = Subset(data, test_indices)
 train_labels = labels[train_indices]
 test_labels = labels[test_indices]
 test_classes = classes[test_indices]
+test_titles = titles[test_indices]
 
 #create sampler for each set of data, s.t each batch contains m of each class
 train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
@@ -109,7 +120,7 @@ train_loader = DataLoader(
     shuffle=False,
     sampler = train_sampler,
     batch_size=batch_size,
-    **kwargs
+    num_workers = 0
 )
 
 #dataloader for test data
@@ -118,7 +129,7 @@ test_loader = DataLoader(
     shuffle=False,
     #sampler = test_sampler,
     batch_size=batch_size,
-    **kwargs
+    num_workers = 0
 )
     #return train_loader, test_loader
 

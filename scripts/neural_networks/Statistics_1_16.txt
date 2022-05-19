@@ -1,0 +1,24 @@
+% This file was created by tikzplotlib v0.9.8.
+\begin{tikzpicture}
+
+\definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+
+\begin{axis}[
+tick align=outside,
+tick pos=left,
+title={Relative amount of errors caught by neural network},
+x grid style={white!69.0196078431373!black},
+xmin=-0.59, xmax=3.59,
+xtick style={color=black},
+y grid style={white!69.0196078431373!black},
+ylabel={Frequency [\%]},
+ymin=0, ymax=0.853125,
+ytick style={color=black}
+]
+\draw[draw=none,fill=color0] (axis cs:-0.4,0) rectangle (axis cs:0.4,0.775);
+\draw[draw=none,fill=color0] (axis cs:0.6,0) rectangle (axis cs:1.4,0.8125);
+\draw[draw=none,fill=color0] (axis cs:1.6,0) rectangle (axis cs:2.4,0.48);
+\draw[draw=none,fill=color0] (axis cs:2.6,0) rectangle (axis cs:3.4,0.654867256637168);
+\end{axis}
+
+\end{tikzpicture}

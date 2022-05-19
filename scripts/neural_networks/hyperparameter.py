@@ -46,29 +46,29 @@ global labels
 global images
 global avg_im
 
-user = "HPC"
+user = "Marcus"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\"
     series = r"AllSeries\\"
-    images = r"CelssCorr_resize\\"
+    images = r"CelssCorr_resize300\\"
     labels = r"all_labels.csv"
     
     
 elif user == "Marcus":
     direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
     series = r"AllSeries\\"
-    images = "CellsCorr_resize"
+    images = "CellsCorr_resize300"
     labels = "labels.csv"
     
 elif user == "HPC":
     direc = '/zhome/35/5/147366/Desktop/'
     series = ''
-    images = 'CellsCorr_resize'
+    images = 'CellsCorr_resize300'
     labels = 'labels.csv'
 
 
 datadir = direc+series
-avg_im = read_image(datadir +"_average_cell.png")[0]
+#avg_im = read_image(datadir +"_average_cell.png")[0]
 
 #from data_sets.create_custom_1 import CustomImageDataset
 # %%
@@ -127,7 +127,7 @@ def load_data(data_dir = datadir,labels = labels,images = images, sample_test = 
     test_labels = labels[test_indices]
     
     #create sampler for each set of data, s.t each batch contains m of each class
-    train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=10000)
+    train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
     if sample_test:
         test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
     else:
@@ -171,7 +171,7 @@ class Net(nn.Module):
                  kernlayers=6,
                  l1=120,  # number of outputs in first linear transformation
                  l2=84,  # number of outputs in second linear transformation
-                 imagew=400,  # width/height of input image
+                 imagew=300,  # width/height of input image
                  drop_p = 0.5 # dropout rate
                  ):
         super().__init__()
@@ -221,20 +221,24 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
         net.load_state_dict(model_state)
         optimizer.load_state_dict(optimizer_state)
 
-    trainloader, valloader = load_data(data_dir,labels,images,sample_test = True)
+    trainloader, valloader = load_data(data_dir,
+                                       labels,
+                                       images,
+                                       sample_test = True)
 
-    printfreq = 20
+    printfreq = 100
     for epoch in range(10):  # loop over the dataset multiple times
     
         running_loss = 0.0
         for i, datas in enumerate(trainloader):
+            net.train()
             # get the inputs; data is a list of [inputs, labels]
             #remove average image to remove lines
             inputs, labels = datas #range = (0,250)
-            inputs -= avg_im #range = (-250,250)
+            #inputs -= avg_im #range = (-250,250)
             inputs /= 255 #range = (-1,1)
-            inputs += 1 # range = (0,2)
-            inputs /= 2 # range = (0,1)
+            #inputs += 1 # range = (0,2)
+            #inputs /= 2 # range = (0,1)
             if device == "cuda:0":
                 inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
                 labels = labels.type(torch.cuda.LongTensor)
@@ -251,55 +255,58 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
     
             # print statistics
             running_loss += loss.item()
-    
-            if i % printfreq == printfreq-1:    # print every 2000 mini-batches
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
-                running_loss = 0.0
-    
+            
             # Validation loss
             val_loss = 0.0
             val_steps = 0
             total = 0
             correct = 0
-            for i, data in enumerate(valloader, 0):
-                with torch.no_grad():
-                    inputs, labels = data
-                    inputs -= avg_im #range = (-250,250)
-                    inputs /= 255 #range = (-1,1)
-                    inputs += 1 # range = (0,2)
-                    inputs /= 2 # range = (0,1)
-                    inputs, labels = inputs.to(device), labels.to(device)
-                    
-                    outputs = net(inputs)
-                    _, predicted = torch.max(outputs.data, 1)
-                    total += labels.size(0)
-                    correct += (predicted == labels).sum().item()
     
-                    loss = criterion(outputs, labels)
-                    val_loss += loss.cpu().numpy()
-                    val_steps += 1
-    
-            with tune.checkpoint_dir(epoch) as checkpoint_dir:
-                path = os.path.join(checkpoint_dir, "checkpoint")
-                torch.save((net.state_dict(), optimizer.state_dict()), path)
-    
-            tune.report(loss=(val_loss / val_steps), accuracy=correct / total)
+            if i % printfreq == printfreq-1:    # print every 2000 mini-batches
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
+                running_loss = 0.0
+
+                for i, data in enumerate(valloader, 0):
+                    with torch.no_grad():
+                        net.eval()
+                        inputs, labels = data
+                        #inputs -= avg_im #range = (-250,250)
+                        inputs /= 255 #range = (-1,1)
+                        #inputs += 1 # range = (0,2)
+                        #inputs /= 2 # range = (0,1)
+                        inputs, labels = inputs.to(device), labels.to(device)
+                        
+                        outputs = net(inputs)
+                        _, predicted = torch.max(outputs.data, 1)
+                        total += labels.size(0)
+                        correct += (predicted == labels).sum().item()
+        
+                        loss = criterion(outputs, labels)
+                        val_loss += loss.cpu().numpy()
+                        val_steps += 1
+        
+                with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                    path = os.path.join(checkpoint_dir, "checkpoint")
+                    torch.save((net.state_dict(), optimizer.state_dict()), path)
+        
+                tune.report(loss=(val_loss / val_steps), accuracy=correct / total)
     print("Finished Training")
     
 
 # %%
 def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = images):
-    trainloader, testloader = load_data(data_dir, labels, images)
+    trainloader, testloader = load_data(data_dir, labels, images,sample_test = False)
 
     correct = 0
     total = 0
+    net.eval()
     with torch.no_grad():
         for data in testloader:
             images, labels = data
-            images -= avg_im #range(-250,250)
+            #images -= avg_im #range(-250,250)
             images /= 255 #range(-1,1)
-            images += 1 #range(0,2)
-            images /= 2 #range(0,1)
+            #images += 1 #range(0,2)
+            #images /= 2 #range(0,1)
             images, labels = images.to(device), labels.to(device)
             outputs = net(images)
             _, predicted = torch.max(outputs.data, 1)
@@ -310,20 +317,21 @@ def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = 
 # %%
 
 
-def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
+def main(num_samples=10, max_num_epochs=10, gpus_per_trial=1):
 
     load_data(datadir, labels,images)
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
-        "lr": tune.loguniform(1e-5, 1e-3),
+        "lr": tune.loguniform(1e-5, 0.1),
         "kernw": tune.choice([40, 50, 60, 70, 80, 90]),
         "kernlayers": tune.choice([6, 8, 10, 12]),
-        "weight": tune.choice([[1.,40.]])#tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
+        "weight": tune.choice([[1.,1.],[1.,5.],[1.,10.],[1.,15.],[1.,20.]]),#tune.choice([[1.,10.],[1.,20.],[1.,30.],[1.,40.]]),
+        "batch_size": tune.choice([4, 8, 16]),
         "dropout": tune.choice([0.4,0.5,0.6])
-        # "batch_size": tune.choice([2, 4, 8, 16])
     }
     scheduler = ASHAScheduler(
+        time_attr = "training_iteration",
         metric="loss",
         mode="min",
         max_t=max_num_epochs,
@@ -339,21 +347,25 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
         num_samples=num_samples,
         scheduler=scheduler,
         progress_reporter=reporter)
-    best_trial = result.get_best_trial("accuracy", "max", "last")
+    best_trial = result.get_best_trial("loss", "min", "last")
     print("Best trial config: {}".format(best_trial.config))
     print("Best trial final validation loss: {}".format(
         best_trial.last_result["loss"]))
     print("Best trial final validation accuracy: {}".format(
         best_trial.last_result["accuracy"]))
 
-    best_trained_model = Net(l1 = best_trial.config["l1"], l2 = best_trial.config["l2"],kernw = best_trial.config["kernw"],kernlayers = best_trial.config["kernlayers"],drop_p = best_trial.config["dropout"])
+    best_trained_model = Net(l1 = best_trial.config["l1"], 
+                             l2 = best_trial.config["l2"],
+                             kernw = best_trial.config["kernw"],
+                             kernlayers = best_trial.config["kernlayers"],
+                             drop_p = best_trial.config["dropout"])
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda:0"
         if gpus_per_trial > 1:
             best_trained_model = nn.DataParallel(best_trained_model)
     best_trained_model.to(device)
-    #torch.save(best_trained_model.state_dict(),"NN_1_7.pt")
+    torch.save(best_trained_model.state_dict(),"NN_1_9_HP.pt")
 
     best_checkpoint_dir = best_trial.checkpoint.value
     model_state, optimizer_state = torch.load(os.path.join(
@@ -366,4 +378,4 @@ def main(num_samples=10, max_num_epochs=10, gpus_per_trial=2):
 
 if __name__ == "__main__":
     # You can change the number of GPUs per trial here:
-    main(num_samples=200, max_num_epochs=10, gpus_per_trial=2)
+    main(num_samples=40, max_num_epochs=100, gpus_per_trial=1)

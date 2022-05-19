@@ -26,7 +26,7 @@ import matplotlib.image as mpimg
 from scipy.io import loadmat
 from skimage.transform import resize
 from PIL import Image
-import utils
+from torchvision import utils
 
 #%%
 #direc = r'C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\\'
@@ -44,7 +44,25 @@ class CustomImageDataset2(Dataset):
         self.masks = list(sorted(os.listdir(os.path.join(root, "MaskGT"))))
 
     def __getitem__(self, idx):
+        """
+        pic = self.imgs[idx]
+        serie = pic.split("_")[3]
+        txt = pic.split("Corr")[1]
+        txt = txt.split(".")[0]
+        pictxt = serie + pic
         
+        
+        label = self.masks[idx]
+        serie = label.split("_")[2]
+        txt = label.split("Image")[1]
+        txt = txt.split(".")[0]
+        masktxt = serie + txt
+        
+        if masktxt != pictxt:
+            print("error")
+            print(masktxt)
+            print(pictxt)
+        """
         
         # load images and masks
         img_path = os.path.join(self.root, "CellsCorr_faulty", self.imgs[idx])
@@ -82,6 +100,7 @@ class CustomImageDataset2(Dataset):
                 iscrowd.append(1)
             else:
                 iscrowd.append(0)
+            
             
             ID = temp_label[i][0][0]
             if ID == 'Crack A':
@@ -149,8 +168,6 @@ def collate_fn(batch):
 #model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 dataset = CustomImageDataset2(direc + series)
 
-import utils
-
 data_loader = torch.utils.data.DataLoader(
  dataset, batch_size=8, shuffle=True, num_workers=0,collate_fn = collate_fn)
 
@@ -166,9 +183,10 @@ for i, data in enumerate(data_loader):
     target1 = target[0]
     print(len(target1["labels"]),len(target1["boxes"]))
     
-    plt.subplot(1, 2, 1)
+    #plt.subplot(1, 2, 1)
     
     plt.imshow(im1, cmap = "gray")
+    plt.axis("off")
     
     for i,box in enumerate(target1["boxes"]):#[xmin, ymin, xmax, ymax]
         plt.plot([box[0],box[2]],[box[1],box[1]],linewidth = 3,c = colors[i%8])    
@@ -180,12 +198,15 @@ for i, data in enumerate(data_loader):
         print("height:",box[3]-box[1])
         print("label:",target1["labels"][i])
     
-    plt.subplot(1, 2, 2)
-    plt.imshow(target1["masks"][0])
     plt.show()
+    #plt.subplot(1, 2, 2)
+    #plt.imshow(target1["masks"][0])
+    #plt.show()
     print(target1["labels"])
     idx = target1["image_id"]
-    break
+    if 3 in target1["labels"][i]:
+        break
+        
     #print(i/N*100)
 
 #%%

@@ -111,7 +111,7 @@ if torch.cuda.is_available():
 net.to(device)
 
 
-w = torch.tensor([1.,15.])
+w = torch.tensor([1.,10.])
 if device == "cuda:0":
     w = w.type(torch.cuda.FloatTensor)#.to(device)
 

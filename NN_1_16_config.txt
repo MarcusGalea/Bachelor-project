@@ -1,0 +1,29 @@
+net = Net(kernw = 60,
+          kernlayers = 10,
+          l1=70,
+          l2=40,
+          imagew = 300
+          )
+
+avg_im = read_image(direc + series+"_average_cell300.png")[0]
+
+device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda:0"
+    if torch.cuda.device_count() > 1:
+        print(device)
+        net = nn.DataParallel(net)
+
+net.to(device)
+
+
+w = torch.tensor([1.,10.])
+if device == "cuda:0":
+    w = w.type(torch.cuda.FloatTensor)#.to(device)
+
+criterion = nn.CrossEntropyLoss(weight=w)
+
+optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
+
+batch_size = 8
