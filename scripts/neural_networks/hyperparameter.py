@@ -39,7 +39,7 @@ parent_folder = pathname.parent.absolute()
 os.chdir(parent_folder)
 
 
-# %%
+# %% directories
 
 global datadir
 global labels
@@ -71,7 +71,7 @@ datadir = direc+series
 #avg_im = read_image(datadir +"_average_cell.png")[0]
 
 #from data_sets.create_custom_1 import CustomImageDataset
-# %%
+# %% Dataset
  
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
@@ -93,7 +93,7 @@ class CustomImageDataset(Dataset):
             label = self.target_transform(label)
         return image[0:1].type(torch.FloatTensor), label
 
-# %%
+#%% loading data
 def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
     data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
     
@@ -161,7 +161,7 @@ def load_data(data_dir = datadir,labels = labels,images = images, sample_test = 
     return train_loader, test_loader
 
 #train_loader, test_loader = load_data(direc+series)
-# %%
+# %% CNN
 
 
 class Net(nn.Module):
@@ -196,7 +196,7 @@ class Net(nn.Module):
         return x
 
 
-# %%
+# %% training and validation
 def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,images = None):
     net = Net(kernw=config["kernw"],kernlayers = config["kernlayers"], l1=config["l1"], l2=config["l2"],drop_p = config["dropout"])
     
@@ -270,10 +270,7 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
                     with torch.no_grad():
                         net.eval()
                         inputs, labels = data
-                        #inputs -= avg_im #range = (-250,250)
-                        inputs /= 255 #range = (-1,1)
-                        #inputs += 1 # range = (0,2)
-                        #inputs /= 2 # range = (0,1)
+                        inputs /= 255 
                         inputs, labels = inputs.to(device), labels.to(device)
                         
                         outputs = net(inputs)
@@ -293,7 +290,7 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
     print("Finished Training")
     
 
-# %%
+# %% testing
 def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = images):
     trainloader, testloader = load_data(data_dir, labels, images,sample_test = False)
 
@@ -314,8 +311,7 @@ def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = 
             correct += (predicted == labels).sum().item()
 
     return correct / total
-# %%
-
+# %% Hyperparameter optimization using shceduler
 
 def main(num_samples=10, max_num_epochs=10, gpus_per_trial=1):
 

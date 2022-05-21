@@ -49,7 +49,7 @@ global labels
 global images
 global avg_im
 
-user = "Aleksander"
+user = "Marcus"
 if user == "Aleksander":
     direc = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\Bachelor Projekt\data\AllSeries\\"
     series = r"AllSeries\\"
@@ -60,6 +60,7 @@ if user == "Aleksander":
 elif user == "Marcus":
     direc = r"C:\Users\Marcu\OneDrive - Danmarks Tekniske Universitet\DTU\6. Semester\Bachelorprojekt\Data\\"
     series = r"AllSeries\\"
+    direc += series
     images = "CellsCorr_resize"
     labels = "labels.csv"
     
@@ -185,7 +186,7 @@ class CustomImageDataset2(Dataset):
 
 #%% Training
 #from engine import train_one_epoch, evaluate
-import utils
+from torchvision import utils
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
@@ -300,7 +301,7 @@ def main():
 
         
     PATH = r"C:\Users\aleks\OneDrive\Skole\DTU\6. Semester\\NN_2_15.pt"
-    #torch.load(model.state_dict(), PATH)
+   #torch.load(model.state_dict(), PATH)
     
     # evaluate on the test dataset
     #evaluate(model, data_loader_test, device=device)
@@ -310,7 +311,11 @@ model, data_loader_test = main()
 
 #%%
 images,targets = next(iter(data_loader_test))
+
+images = (images[0:1])
+targets = (targets[0:1])
 images = list(image for image in images)
 images = torch.tensor(images)
+images
 targets = [{k: v for k, v in t.items()} for t in targets]
 output = model(images,targets)
