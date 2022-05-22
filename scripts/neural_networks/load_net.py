@@ -15,7 +15,7 @@ pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 
 
-PATH = str(parent_folder) + r"\\neural_networks\\NN_1_9_HP_1.pt"
+PATH = str(parent_folder) + r"\\neural_networks\\NN_1_10_HP_1.pt"
 
 #get dataloader
 from create_custom_1 import data, test_loader, train_loader,direc,series,test_split,test_indices, test_classes,test_titles,labeldf
