@@ -15,7 +15,7 @@ pathname = Path(dname)
 parent_folder = pathname.parent.absolute()
 
 
-PATH = str(parent_folder) + "\\NN_1_14.pt"
+PATH = str(parent_folder) + r"\\neural_networks\\NN_1_9_HP_1.pt"
 
 #get dataloader
 from create_custom_1 import data, test_loader, train_loader,direc,series,test_split,test_indices, test_classes,test_titles,labeldf
@@ -32,11 +32,12 @@ from torchvision.io import read_image
 import pandas as pd
 
 
-net = Net(kernw = 70,
+net = Net(kernw = 40,
           kernlayers = 10,
-          l1=100,
-          l2=50,
-          imagew = 300
+          l1=256,
+          l2=64,
+          imagew = 300,
+          prob = 0.6
           )
 
 device = "cpu"
@@ -131,10 +132,10 @@ predc = [0,0,0,0]
 with torch.no_grad():
     for i,data in enumerate(test_loader):
         images, labels = data #range(0,250)
-        images -= avg_im #range(-250,250)
+        #images -= avg_im #range(-250,250)
         images /= 255 #range(-1,1)
-        images += 1 #range(0,2)
-        images /= 2 #range(0,1)
+        #images += 1 #range(0,2)
+        #images /= 2 #range(0,1)
         if device == "cuda:0":
             images = images.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)  
@@ -151,7 +152,11 @@ with torch.no_grad():
                 C[1,0] += 1
             if label == 0 and prediction == 0:
                 C[1,1] += 1
+        print(C)
+#%%    
+    
             #statistics
+            """
             MC = test_classes[i*8+j]
             MC = MC.split('[')[1].split(']')[0].split(',')
 
@@ -163,7 +168,7 @@ with torch.no_grad():
                         predc[k] += 1
             print("predictions", predc)
             print("ground truth", Nc)
-        
+        """
 #%% statistics
 import tikzplotlib
 
@@ -178,23 +183,29 @@ plt.show()
                 
 #%% Conformal prediction
 alpha = 0.05
+
+#size of calibration set
 ncal = len(test_loader)//2
-#score = torch.tensor([])
+
+
 alphas = torch.arange(0,1,0.01).to(device)
 n = len(alphas)
 score = torch.tensor([]).to(device)
-score,
 qhat = np.zeros(n)
 
+# number of negative, positive and total data
 nN = 0
 nP = 0
 nD = 0
 
+
+#performance metrics for each value of alpha
 TN = np.zeros(100)
 FP = np.zeros(100)
 TP = np.zeros(100)
 FN = np.zeros(100)
 
+#amount of high quality prediction sets for each alpha
 N_HC = np.zeros(100)
 low_conf = [[] for i in range(100)]
 
@@ -202,17 +213,18 @@ with torch.no_grad():
     for i,data in enumerate(test_loader):
         print("iter", i)
 
+        #load data
         images, labels = data #range(0,250)
         images -= avg_im #range(-250,250)
         images /= 255 #range(-1,1)
         images += 1 #range(0,2)
         images /= 2 #range(0,1)
-        if device == "cuda:0":
+        if device == "cuda:0": #send to GPU
             images = images.type(torch.cuda.FloatTensor)#.to(device)
             labels = labels.type(torch.cuda.LongTensor)  
-        outputs = net(images)
+        outputs = net(images) #neural network estimates
         _, predictions = torch.max(outputs, 1)
-        if i < ncal:
+        if i < ncal: #calibration step
             score = torch.cat((score,outputs[np.arange(8),labels]))
         else:
             if i == ncal:

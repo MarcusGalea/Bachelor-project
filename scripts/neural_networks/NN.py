@@ -43,6 +43,7 @@ class Net(nn.Module):
                  weights = None,
                  biases = None,
                  imagew = 300, #width/height of input image
+                 prob = 0.5
                  ):
         super().__init__()
         self.conv1 = nn.Conv2d(1, kernlayers, kernw) #third arg: remove n-1 from img dim
@@ -52,7 +53,7 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(l1, l2)
         self.fc3 = nn.Linear(l2, 2)
         self.sig = nn.Sigmoid()
-        self.drop = nn.Dropout(p=0.5)
+        self.drop = nn.Dropout(p=prob)
         #self.init_weights(weights,biases)
     
     def init_weights(self,weights,biases):
@@ -91,11 +92,12 @@ for PC in os.listdir(PC_link):
     biases[k] = torch.dot(-PC.reshape(-1,1).squeeze(),avg)
     k+= 1
 """
-net = Net(kernw = 70,
+net = Net(kernw = 40,
           kernlayers = 10,
-          l1=100,
-          l2=50,
-          imagew = 300
+          l1=256,
+          l2=64,
+          imagew = 300,
+          prob = 0.6
           )
 
 avg_im = read_image(direc + series+"_average_cell300.png")[0]
@@ -115,9 +117,9 @@ w = torch.tensor([1.,10.])
 if device == "cuda:0":
     w = w.type(torch.cuda.FloatTensor)#.to(device)
 
-criterion = nn.CrossEntropyLoss(weight=w)
+criterion = nn.CrossEntropyLoss(weight=w) 
 
-optimizer = torch.optim.Adam(net.parameters(),lr =0.0001)
+optimizer = torch.optim.Adam(net.parameters(),lr =0.0000109362)
 
 #%% show kernels
 #plt.imshow(net.conv1.weight.cpu().detach().numpy()[0][0],cmap = "gray")

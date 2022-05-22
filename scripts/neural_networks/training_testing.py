@@ -20,7 +20,7 @@ from NN import *
 #%% Training
 
 
-printfreq = 20
+printfreq = 100
 N = len(train_loader)
 
 
@@ -53,13 +53,13 @@ for epoch in range(8):  # loop over the dataset multiple times
         running_loss += loss.item()
         # print statistics
         
-        if i % printfreq == printfreq-1:    # print every 2000 mini-batches
+        if i % printfreq == printfreq-1:    # print every 100 mini-batches
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
             table.append([epoch +1, i+1, running_loss / printfreq])
             running_loss = 0.0
 
 print('Finished Training')
-PATH = "NN_1_8_HP_1.pt"
+PATH = "NN_1_10_HP_1.pt"
 torch.save(net.state_dict(), PATH)
-pd.DataFrame(table).to_csv(dname + "\\loss_1_8_HP_1.csv",header = None, index = None)
+pd.DataFrame(table).to_csv(dname + "\\loss_1_10_HP_1.csv",header = None, index = None)
 

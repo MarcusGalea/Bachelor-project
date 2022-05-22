@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Mar 20 12:10:46 2022
-Hyperparameter 2.0
 
-@author: Marcu
+
+Authors :
+    Aleksander Svendstorp - s194323
+    Marcus Galea Jacobsen - s194336
+
+ Last edited : 21/05 -2022
+
+ Script name : Hyperparameter . py
+ Script function : Optimize hyperparameters for LENET CNN
 """
 from torch.utils.data import Dataset, DataLoader, random_split, ConcatDataset, Subset
 from torchvision import transforms, utils
@@ -95,6 +102,9 @@ class CustomImageDataset(Dataset):
 
 #%% loading data
 def load_data(data_dir = datadir,labels = labels,images = images, sample_test = False):
+    
+    
+    #create dataset
     data = CustomImageDataset(annotations_file = data_dir + labels,img_dir = data_dir + images,transform = transforms.RandomVerticalFlip())
     
     
@@ -128,7 +138,7 @@ def load_data(data_dir = datadir,labels = labels,images = images, sample_test = 
     
     #create sampler for each set of data, s.t each batch contains m of each class
     train_sampler = MPerClassSampler(train_labels, m, batch_size=batch_size, length_before_new_iter=100000)
-    if sample_test:
+    if sample_test: #sampling test data is optional
         test_sampler = MPerClassSampler(test_labels, m, batch_size=batch_size, length_before_new_iter=1000)
     else:
         test_sampler = None
@@ -233,16 +243,11 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
         for i, datas in enumerate(trainloader):
             net.train()
             # get the inputs; data is a list of [inputs, labels]
-            #remove average image to remove lines
             inputs, labels = datas #range = (0,250)
-            #inputs -= avg_im #range = (-250,250)
-            inputs /= 255 #range = (-1,1)
-            #inputs += 1 # range = (0,2)
-            #inputs /= 2 # range = (0,1)
-            if device == "cuda:0":
+            inputs /= 255 
+            if device == "cuda:0": #send to GPU
                 inputs = inputs.type(torch.cuda.FloatTensor)#.to(device)
                 labels = labels.type(torch.cuda.LongTensor)
-            #labels = labels.to(device)
     
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -266,7 +271,7 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / printfreq:.3f}')
                 running_loss = 0.0
 
-                for i, data in enumerate(valloader, 0):
+                for i, data in enumerate(valloader, 0): # run through validation dataset
                     with torch.no_grad():
                         net.eval()
                         inputs, labels = data
@@ -282,7 +287,7 @@ def train_cifar(config, checkpoint_dir = None, data_dir = None,labels = None,ima
                         val_loss += loss.cpu().numpy()
                         val_steps += 1
         
-                with tune.checkpoint_dir(epoch) as checkpoint_dir:
+                with tune.checkpoint_dir(epoch) as checkpoint_dir: #send results to scheduler
                     path = os.path.join(checkpoint_dir, "checkpoint")
                     torch.save((net.state_dict(), optimizer.state_dict()), path)
         
@@ -311,11 +316,13 @@ def test_accuracy(net, device="cpu",data_dir = datadir,labels = labels,images = 
             correct += (predicted == labels).sum().item()
 
     return correct / total
-# %% Hyperparameter optimization using shceduler
+# %% Hyperparameter optimization using ASHA shceduler
 
 def main(num_samples=10, max_num_epochs=10, gpus_per_trial=1):
 
     load_data(datadir, labels,images)
+    
+    #configuration space
     config = {
         "l1": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),
         "l2": tune.sample_from(lambda _: 2 ** np.random.randint(2, 9)),

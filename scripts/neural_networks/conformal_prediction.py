@@ -1,22 +1,65 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May  2 09:30:30 2022
+Created on Fri Mar 25 09:09:45 2022
+Authors :
+    Aleksander Svendstorp - s194323
+    Marcus Galea Jacobsen - s194336
 
-@author: Marcu
+ Last edited : 21/05 -2022
+
+ Script name : conformal_prediction . py
+ Script function : Create figures for analysis on Conformal prediction sets
+ 
 """
-
-
 import os
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.image as mpimg
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
-from scipy.io import loadmat
-import shutil
-import matplotlib.pyplot as plt
-import time
+pathname = Path(dname)
+parent_folder = pathname.parent.absolute()
+
+
+PATH = str(parent_folder) + "\\NN_1_14.pt"
+
+#get dataloader
+from create_custom_1 import data, test_loader, train_loader,direc,series,test_split,test_indices, test_classes,test_titles,labeldf
+from NN import device,Net,avg_im
 import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+from torchvision.io import read_image
+import pandas as pd
+
+
+net = Net(kernw = 70,
+          kernlayers = 10,
+          l1=100,
+          l2=50,
+          imagew = 300
+          )
+
+device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda:0"
+    if torch.cuda.device_count() > 1:
+        print(device)
+        net = nn.DataParallel(net)
+
+net.to(device)
+if device == "cuda:0":
+    net.load_state_dict(torch.load(PATH))
+elif device == "cpu":
+    net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
+net.eval()
+
 
 
 #%%
@@ -24,136 +67,117 @@ import torch
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-#%%
-from NN import Net
-#%%
+#%% Conformal prediction
+alpha = 0.05
+
+#size of calibration set
+ncal = len(test_loader)//2
 
 
-from create_custom_1 import train_loader,test_split,train_sampler,train_split
+#define significance level space
+alphas = torch.arange(0,1,0.01).to(device)
+n = len(alphas)
+score = torch.tensor([]).to(device)
+qhat = np.zeros(n)
 
-from skorch import NeuralNetClassifier,NeuralNetBinaryClassifier
-from torch.utils.data import Subset,DataLoader
-#%%
-from pytorch_metric_learning.samplers import MPerClassSampler
-from skorch.helper import SliceDataset
-
-#%%
-y_train_np = np.array([y for x,y in iter(train_split)])
-y_test_np = np.array([y for x,y in iter(test_split)])
-
-#%%
-device = "cuda" if torch.cuda.is_available() else "cpu"
-batch_size = 8
-m = batch_size//2
-kwargs = {'num_workers': 1, 'pin_memory': True} if device=='cuda' else {}
+# number of negative, positive and total data
+nN = 0
+nP = 0
+nD = 0
 
 
+#performance metrics for each value of alpha
+TN = np.zeros(100)
+FP = np.zeros(100)
+TP = np.zeros(100)
+FN = np.zeros(100)
 
-n = len(train_split)//2
-y_cal = y_train_np[n:]
-y_train = y_train_np[:n]
-x_cal = Subset(train_split, np.arange(n))
-x_train = Subset(train_split, np.arange(n,n*2))
+#amount of high quality prediction sets for each alpha
+N_HC = np.zeros(100)
+
+#sampling low quality data
+low_conf = [[] for i in range(100)]
+
+with torch.no_grad():
+    for i,data in enumerate(test_loader):
+        print("iter", i)
+
+        #load data
+        images, labels = data #range(0,250)
+        #images -= avg_im #range(-250,250)
+        images /= 255 #range(-1,1)
+        #images += 1 #range(0,2)
+        #images /= 2 #range(0,1)
+        if device == "cuda:0": #send to GPU
+            images = images.type(torch.cuda.FloatTensor)#.to(device)
+            labels = labels.type(torch.cuda.LongTensor)  
+        outputs = net(images) #neural network estimates
+        _, predictions = torch.max(outputs, 1)
+        if i < ncal: #calibration data
+            #score calculation in calibration data
+            score = torch.cat((score,outputs[np.arange(8),labels]))
+        else:
+            if i == ncal: #calibration step. Calculate quantile for threshold
+                qhat = torch.quantile(score,(ncal+1)*alphas/ncal,interpolation = "lower")
+                
+            elif i >= ncal: #test data
+            
+                nD += len(images)
+                nN += len(torch.where(labels==0)[0])
+                nP += len(torch.where(labels==1)[0])
+                
+                
+                for j in range(100): #loop through significance levels
+                    idx = torch.where(outputs > qhat[j]) #apply threshold on data
+                    CP = [[]for i in range(8)]
+                    for k in range(np.shape(idx[1])[0]):
+                        #produce conformal prediction sets
+                        CP[idx[0][k]].append(idx[1][k])
+                    
+                    for l,label in enumerate(labels):#loop through batch
+
+                        if len(CP[l]) == 1: #high confidence data
+                            N_HC[j] += 1
+                            pred = CP[l][0]
+                            
+                            #performance mesurements of high confidence data
+                            if pred == label and pred == 1:
+                                TP[j] += 1
+                            elif pred != label and pred == 1:
+                                FP[j] += 1
+                            elif pred == label and pred == 0:
+                                TN[j] += 1
+                            elif pred != label and pred == 0:
+                                FN[j] += 1
+                        else: #low confidence data 
+                            low_conf[j].append(test_indices[i*8+l])
+                            
+                print("no defect")
+                print("TN: ", TN[::10])
+                print("FP: ", FP[::10])
+                print("defect")
+                print("TP: ", TP[::10])
+                print("FN: ", FN[::10])
+                #if len(np.where(labels==1)[0]) > 0:
+                 #   break
+#%% plots of conformal prediction
+import tikzplotlib as tikz
 
 
-#create sampler for each set of data, s.t each batch contains m of each class
-train_sampler = MPerClassSampler(y_train, 
-                                 m, 
-                                 batch_size=batch_size, 
-                                 length_before_new_iter=100000)
+alphas = alphas.cpu()
+HCD = (TP+TN+FP+FN)/nD #proportion of HQ data
 
+TNr = TN/(FP+TN)
 
+TPr = TP/(TP+FN)
 
-train_loader = DataLoader(
-    x_train,
-    shuffle=False,
-    #sampler = train_sampler,
-    batch_size=batch_size,
-    **kwargs
-)
-cal_loader = DataLoader(
-    x_cal,
-    shuffle=False,
-    #sampler = train_sampler,
-    batch_size=batch_size,
-    **kwargs
-)
-
-
-#dataloader for test data
-test_loader = DataLoader(
-    test_split,
-    shuffle=False,
-    #sampler = test_sampler,
-    batch_size=batch_size,
-    **kwargs
-)
-#%%
-import pickle
-
-w = torch.tensor([1.,10.])
-if device == "cuda:0":
-    w = w.type(torch.cuda.FloatTensor)#.to(device)
-
-criterion = torch.nn.CrossEntropyLoss(weight=w)
-
-net = Net()
-
-"""
-PATH = "NN_1_5.pt"
-
-if device == "cuda:0":
-    net.load_state_dict(torch.load(PATH))
-elif device == "cpu":
-    net.load_state_dict(torch.load(PATH,map_location = torch.device('cpu')))
-
-net.eval()
-"""
-net_m = NeuralNetClassifier(net,
-                        criterion = criterion, 
-                        max_epochs = 10, 
-                        lr = 0.0001, 
-                        batch_size = 8, 
-                        optimizer = torch.optim.Adam,
-                        dataset = x_train,
-                        train_split = None,
-                        iterator_train__sampler = train_sampler,
-                        #iterator_train = train_loader,
-                        device = device
-                        )
-
-"""
-net_m.initialize()  # This is important!
-net_m.load_params(f_params=PATH)
-"""
-
-ds = SliceDataset(x_train)
-net_m.fit(X = x_train,y=y_train)
-
-with open('net_m_1_6.pkl', 'wb') as f:
-    pickle.dump(net_m, f)
-#%%
-"""
-with open('net_m_1_5.pkl', 'rb') as f:
-    net_m = pickle.load(f)
-
-from mapie.classification import MapieClassifier
-
-net_m.module.eval()
-
-#small_test = Subset(test_split,np.arange(1000))
-small_test = test_split
-
-y_pred = net_m.predict(X = small_test)
-
-TP = np.intersect1d(np.where(y_pred==1)[0],np.where(y_test_np==1)[0])
-#%%
-cal_arr = np.array([])
-for i in range(len(x_cal)):
-    
-#%%
-mapie_score = MapieClassifier(estimator=net_m, cv="prefit", method="score")
-mapie_score.fit(x_cal, y_cal)
-alpha = [0.2, 0.1, 0.05]
-y_pred_score, y_ps_score = mapie_score.predict(x_cal, alpha=alpha)
-"""
+plt.plot(alphas, TPr)
+plt.plot(alphas, TNr)
+plt.plot(alphas, HCD)
+#plt.plot(thresh*np.ones(100),np.arange(0,1,0.01))
+plt.title("High confidence set")
+plt.xlabel("alpha")
+plt.ylabel("Frequency")
+plt.legend(["TPR","TNR","High Conf Dat "])
+tikz.save("CP_1_14.tex")
+plt.show()
